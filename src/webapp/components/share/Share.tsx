@@ -10,7 +10,7 @@ interface ShareState {
     hover: boolean;
 }
 
-class Share extends React.PureComponent<ShareProps, ShareState> {
+class Share extends React.Component<ShareProps, ShareState> {
     state: ShareState = { expanded: false, hover: false };
 
     toggleExpanded = () => {
@@ -42,11 +42,7 @@ class Share extends React.PureComponent<ShareProps, ShareState> {
 
         return (
             <div>
-                <div
-                    style={styles.shareTab}
-                    onMouseEnter={this.setHover}
-                    onMouseLeave={this.unsetHover}
-                >
+                <div style={styles.shareTab} onMouseEnter={this.setHover} onMouseLeave={this.unsetHover}>
                     <button style={shareStyles} onClick={this.toggleExpanded}>
                         <i className="fa fa-share icon-xlarge" />
                     </button>
@@ -55,10 +51,7 @@ class Share extends React.PureComponent<ShareProps, ShareState> {
                 {expanded && (
                     <div style={styles.eyeseeteaShare}>
                         <p>
-                            <button
-                                style={styles.eyeseeteaShareButtons}
-                                onClick={this.openMainPage}
-                            >
+                            <button style={styles.eyeseeteaShareButtons} onClick={this.openMainPage}>
                                 <img src={logo} alt="EyeSeeTea" style={styles.eyeseeteaIcon} />
                             </button>
                         </p>

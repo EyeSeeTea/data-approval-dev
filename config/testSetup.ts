@@ -1,13 +1,5 @@
-import { TextDecoder, TextEncoder } from "util";
+import { configure } from "enzyme";
+import Adapter from "enzyme-adapter-react-16";
+import "@testing-library/jest-dom/extend-expect";
 
-global.console = {
-    error: console.error,
-    info: console.info,
-    log: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
-};
-
-// Polyfill for encoding which isn't present globally in jsdom
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder;
+configure({ adapter: new Adapter() });

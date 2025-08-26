@@ -1,0 +1,62 @@
+export const styles = _theme => ({
+    container: {
+        backgroundColor: "#ffffff",
+        transition: "all 0.3s",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "25px",
+        boxShadow:
+            "0px 2px 4px -1px rgb(0 0 0 / 20%), 0px 4px 5px 0px rgb(0 0 0 / 14%), 0px 1px 10px 0px rgb(0 0 0 / 12%)",
+        marginBottom: "50px",
+    },
+    logo: {
+        verticalAlign: "middle",
+        width: "150px",
+        margin: "auto",
+    },
+    exitIcon: {
+        color: "#ffffff",
+    },
+    titleContainer: {
+        display: "flex",
+        alignItems: "center",
+        gap: "30px",
+    },
+    title: {
+        color: "#0099DE",
+        lineHeight: "1.5",
+        cursor: "pointer",
+        textAlign: "center",
+        margin: "0",
+        fontSize: "35px",
+    },
+    messages: {
+        position: "relative",
+    },
+    messageCount: {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 1,
+        position: "absolute",
+        top: "-6px",
+        right: "-6px",
+        minWidth: "12px",
+        minHeight: "18px",
+        borderRadius: "12px",
+        boxShadow: "rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 1px 2px 0px",
+        backgroundColor: "rgb(0, 137, 123)",
+        color: "rgb(255, 255, 255)",
+        fontWeight: 600,
+        padding: "1px 4px",
+        cursor: "pointer",
+    },
+    logout: {
+        marginLeft: "10px",
+        padding: "18px",
+        backgroundColor: "#0099DE",
+        fontWeight: "bold",
+        color: "#ffffff",
+    },
+});
