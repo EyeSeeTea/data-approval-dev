@@ -39,9 +39,14 @@ export const DataDifferencesList: React.FC<DataDifferencesListProps> = ({ select
         () => ({
             columns: [
                 { name: "dataElement", text: i18n.t("Data Element"), sortable: true },
-                { name: "value", text: i18n.t("Value entered"), sortable: false },
+                { name: "value", text: i18n.t("Value entered"), sortable: false, getValue: item => item.value ?? "" },
                 { name: "comment", text: i18n.t("Comment"), sortable: false },
-                { name: "apvdValue", text: i18n.t("Approved value"), sortable: false },
+                {
+                    name: "apvdValue",
+                    text: i18n.t("Approved value"),
+                    sortable: false,
+                    getValue: item => item.apvdValue ?? "",
+                },
                 { name: "apvdComment", text: i18n.t("Approved value comment"), sortable: false },
             ],
             actions: [
