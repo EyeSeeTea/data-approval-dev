@@ -67,9 +67,6 @@ const undefinedType = Codec.custom<undefined>({
     schema: () => ({ type: "null" }),
 });
 
-// Short and long HEX color format
-const colorRegExp = /^#[0-9a-fA-F]{3,6}$/;
-
 // RFC2822 email format
 const emailRegExp =
     /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
@@ -109,7 +106,6 @@ export const Schema = {
     extend: intersect,
     maybe,
     regex: RegExpMatchedString,
-    color: RegExpMatchedString(colorRegExp),
     email: RegExpMatchedString(emailRegExp),
     url: RegExpMatchedString(urlRegExp),
     dhis2Id: RegExpMatchedString(dhis2Uid),

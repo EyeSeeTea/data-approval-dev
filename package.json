@@ -48,6 +48,7 @@
         "styled-jsx": "4.0.1"
     },
     "scripts": {
+        "prestart": "yarn localize",
         "start": "react-scripts start",
         "craco-start": "craco start",
         "prebuild": "yarn localize && yarn test",

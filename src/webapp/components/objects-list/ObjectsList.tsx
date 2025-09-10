@@ -12,7 +12,7 @@ import {
 } from "@eyeseetea/d2-ui-components";
 import { LinearProgress } from "material-ui";
 import { makeStyles } from "@material-ui/core";
-import { Spinner } from "../objects-list/Spinner";
+import { Spinner } from "./Spinner";
 
 export interface ObjectsListProps<Obj extends ReferenceObject> {
     isLoading: boolean;
