@@ -4,6 +4,7 @@ import { MuiThemeProvider } from "@material-ui/core/styles";
 import { SnackbarProvider, LoadingProvider } from "@eyeseetea/d2-ui-components";
 import _ from "lodash";
 //@ts-ignore
+import { HeaderBar } from "@dhis2/ui";
 import OldMuiThemeProvider from "material-ui/styles/MuiThemeProvider";
 import React from "react";
 import { appConfig } from "../../../app-config";
@@ -52,6 +53,8 @@ const App = ({ api, d2 }: { api: D2Api; d2: D2 }) => {
             <OldMuiThemeProvider muiTheme={muiThemeLegacy}>
                 <LoadingProvider>
                     <SnackbarProvider>
+                        <HeaderBar appName="Data Approval" />
+
                         <div id="app" className="content">
                             <AppContext.Provider value={appContext}>
                                 <Report />

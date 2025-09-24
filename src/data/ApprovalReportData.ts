@@ -4,25 +4,27 @@ import { Code } from "../domain/common/entities/Base";
 const nhwaDataCapture1 = "NHWA _DATA Capture Module 1";
 const nhwaDataCapture2 = "NHWA _DATA Capture Module 2-4";
 const nhwaAdmin = "NHWA administrators";
+const nhwaDataClerk = "NHWA Data Clerk";
+const nhwaDataManagers = "NHWA Data Managers";
 
 export const approvalReportAccess: D2ApprovalReportAccess = {
     dataSets: {
         "NHWA-M1-2023": {
-            complete: { userGroups: [nhwaAdmin], users: [] },
-            incomplete: { userGroups: [nhwaAdmin], users: [] },
+            complete: { userGroups: [nhwaAdmin, nhwaDataClerk, nhwaDataManagers], users: [] },
+            incomplete: { userGroups: [nhwaAdmin, nhwaDataClerk, nhwaDataManagers], users: [] },
             monitoring: { userGroups: [nhwaAdmin], users: [] },
-            read: { userGroups: [nhwaAdmin, nhwaDataCapture1], users: [] },
-            revoke: { userGroups: [nhwaAdmin, nhwaDataCapture1], users: [] },
-            submit: { userGroups: [nhwaAdmin, nhwaDataCapture1], users: [] },
+            read: { userGroups: [nhwaAdmin, nhwaDataClerk, nhwaDataCapture1, nhwaDataManagers], users: [] },
+            revoke: { userGroups: [nhwaAdmin, nhwaDataManagers], users: [] },
+            submit: { userGroups: [nhwaAdmin, nhwaDataManagers], users: [] },
             approve: { userGroups: [nhwaAdmin], users: [] },
         },
         "NHWA-M2-2023": {
-            complete: { userGroups: [nhwaAdmin], users: [] },
-            incomplete: { userGroups: [nhwaAdmin], users: [] },
+            complete: { userGroups: [nhwaAdmin, nhwaDataClerk, nhwaDataManagers], users: [] },
+            incomplete: { userGroups: [nhwaAdmin, nhwaDataClerk, nhwaDataManagers], users: [] },
             monitoring: { userGroups: [nhwaAdmin], users: [] },
-            read: { userGroups: [nhwaAdmin, nhwaDataCapture2], users: [] },
-            revoke: { userGroups: [nhwaAdmin, nhwaDataCapture2], users: [] },
-            submit: { userGroups: [nhwaAdmin, nhwaDataCapture2], users: [] },
+            read: { userGroups: [nhwaAdmin, nhwaDataClerk, nhwaDataCapture2, nhwaDataManagers], users: [] },
+            revoke: { userGroups: [nhwaAdmin, nhwaDataManagers], users: [] },
+            submit: { userGroups: [nhwaAdmin, nhwaDataManagers], users: [] },
             approve: { userGroups: [nhwaAdmin], users: [] },
         },
     },
