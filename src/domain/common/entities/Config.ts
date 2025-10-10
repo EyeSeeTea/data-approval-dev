@@ -21,6 +21,7 @@ export interface Config {
     years: string[];
     approvalWorkflow: NamedRef[];
     appSettings: AppSettings;
+    timeZoneId: string;
 }
 
 export function getMainUserPaths(config: Config) {

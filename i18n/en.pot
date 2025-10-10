@@ -5,10 +5,16 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"POT-Creation-Date: 2025-08-26T00:02:21.381Z\n"
-"PO-Revision-Date: 2025-08-26T00:02:21.381Z\n"
+"POT-Creation-Date: 2025-10-10T16:43:16.465Z\n"
+"PO-Revision-Date: 2025-10-10T16:43:16.465Z\n"
 
 msgid "0"
+msgstr ""
+
+msgid "Completing dataset..."
+msgstr ""
+
+msgid "Submitting dataset..."
 msgstr ""
 
 msgid "<No value>"
@@ -625,6 +631,11 @@ msgstr ""
 msgid "Check Difference"
 msgstr ""
 
+msgid ""
+"The list could not be loaded because analytics jobs are currently running. "
+"Please try again in a few seconds by clicking 'Apply Filters'."
+msgstr ""
+
 msgid "Check differences"
 msgstr ""
 
@@ -671,9 +682,6 @@ msgid "Revoking dataset"
 msgstr ""
 
 msgid "Error when trying to unsubmit data set"
-msgstr ""
-
-msgid "Submitting dataset"
 msgstr ""
 
 msgid "Error when trying to submit data set"

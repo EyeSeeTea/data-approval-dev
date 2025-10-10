@@ -174,7 +174,7 @@ export const DataApprovalList: React.FC = React.memo(() => {
                 if (isCancelled) return;
 
                 console.debug("Reloading", reloadKey);
-                setRows(getDataApprovalViews(objects));
+                setRows(getDataApprovalViews(objects, config.timeZoneId));
                 setIsLoading(false);
                 setError(undefined);
             } catch (err) {
@@ -186,6 +186,7 @@ export const DataApprovalList: React.FC = React.memo(() => {
                             "The list could not be loaded because analytics jobs are currently running. Please try again in a few seconds by clicking 'Apply Filters'."
                         )
                     );
+                    setRows([]);
                 }
             } finally {
                 if (!isCancelled) {

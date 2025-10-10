@@ -121,6 +121,7 @@ export class Dhis2ConfigRepository implements ConfigRepository {
 
     async get(): Promise<Config> {
         const appSettings = this.d2ApprovalReport.get();
+        const { serverTimeZoneId } = await this.api.system.info.getData();
         const { dataSets, sqlViews: existedSqlViews, dataApprovalWorkflows } = await this.getMetadata(appSettings);
         const currentUser = await this.getCurrentUser();
         const userGroups = currentUser.userGroups.map(group => group.name);
@@ -148,6 +149,7 @@ export class Dhis2ConfigRepository implements ConfigRepository {
         const orgUnitList = getPairedOrgunitsMapping(filteredDataSets);
         const currentYear = new Date().getFullYear();
         return {
+            timeZoneId: serverTimeZoneId,
             dataSets: keyById(dataSetsToShow),
             currentUser: {
                 ...currentUser,
