@@ -16,7 +16,7 @@ export class UpdateMalApprovalStatusUseCase {
         private appSettingsRepository: AppSettingsRepository
     ) {}
 
-    async execute(items: MalDataApprovalItemIdentifier[], action: UpdateAction): Promise<boolean> {
+    async execute(items: MalDataApprovalItemIdentifier[], action: UpdateAction, log?: Log): Promise<boolean> {
         const itemsByDataSet = _(items)
             .groupBy(item => item.dataSet)
             .value();
@@ -35,7 +35,7 @@ export class UpdateMalApprovalStatusUseCase {
                     return this.approvalRepository.complete(itemsToUpdate);
                 case "approve":
                     // "Submit" in UI
-                    return this.approvalRepository.approve(itemsToUpdate);
+                    return this.approvalRepository.approve(itemsToUpdate, log);
                 case "duplicate": {
                     // "Approve" in UI
                     const dataElementsWithValues = await this.getDataElementsToDuplicate(itemsToUpdate);
@@ -104,3 +104,5 @@ type UpdateAction =
     | "activate"
     | "deactivate"
     | "revoke";
+
+export type Log = (msg: string) => void;

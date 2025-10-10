@@ -4,6 +4,22 @@ import { format } from "date-fns";
 import i18n from "../../../../../locales";
 import { TableColumn } from "@eyeseetea/d2-ui-components";
 
+const pad = (n: number): string => n.toString().padStart(2, "0");
+
+const formatDateToLocal = (utcString: string): string => {
+    const date = new Date(utcString);
+
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    const seconds = pad(date.getSeconds());
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
 export function useDataApprovalListColumns() {
     const getColumnValues = useCallback((row: DataApprovalViewModel) => {
         return {
@@ -12,7 +28,7 @@ export function useDataApprovalListColumns() {
             lastDateOfSubmission: row.lastDateOfSubmission
                 ? format(row.lastDateOfSubmission, dateFormat)
                 : "Never submitted",
-            lastUpdatedValue: row.lastUpdatedValue ? format(row.lastUpdatedValue, dateFormat) : "No data",
+            lastUpdatedValue: row.lastUpdatedValue ? formatDateToLocal(row.lastUpdatedValue.toISOString()) : "No data",
             validated: row.validated ? "Submitted" : row.completed ? "Ready for submission" : "Not submitted",
         };
     }, []);

@@ -4,12 +4,13 @@ import { PaginatedObjects, Paging, Sorting } from "../../../common/entities/Pagi
 import { MalDataApprovalItem, MalDataApprovalItemIdentifier } from "../entities/MalDataApprovalItem";
 import { DataDiffItemIdentifier } from "../entities/DataDiffItem";
 import { DataValueStats } from "../../../common/entities/DataValueStats";
+import { Log } from "../usecases/UpdateMalApprovalStatusUseCase";
 
 export interface MalDataApprovalRepository {
     get(options: MalDataApprovalOptions): Promise<PaginatedObjects<MalDataApprovalItem>>;
     save(filename: string, dataSets: MalDataApprovalItem[]): Promise<void>;
     complete(dataSets: MalDataApprovalItemIdentifier[]): Promise<boolean>;
-    approve(dataSets: MalDataApprovalItemIdentifier[]): Promise<boolean>;
+    approve(dataSets: MalDataApprovalItemIdentifier[], log?: Log): Promise<boolean>;
     duplicateDataSets(
         dataSets: MalDataApprovalItemIdentifier[],
         dataElementsWithValues: DataDiffItemIdentifier[]

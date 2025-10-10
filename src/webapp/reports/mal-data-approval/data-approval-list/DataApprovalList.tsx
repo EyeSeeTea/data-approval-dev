@@ -31,6 +31,8 @@ import { useDataApprovalListColumns } from "./hooks/useDataApprovalListColumns";
 import { useActiveDataApprovalActions } from "./hooks/useActiveDataApprovalActions";
 import { useDataApprovalActions } from "./hooks/useDataApprovalActions";
 import { useSelectablePeriods } from "./hooks/useSelectablePeriods";
+import { Alert } from "../../../components/alert/Alert";
+import { makeStyles } from "@material-ui/core";
 
 const defaultSorting: TableSorting<DataApprovalViewModel> = {
     field: "dataSet",
@@ -48,6 +50,9 @@ export const DataApprovalList: React.FC = React.memo(() => {
     const [page] = React.useState(1);
     const [pageSize] = React.useState(50);
     const [rows, setRows] = React.useState<DataApprovalViewModel[]>([]);
+    const [error, setError] = React.useState<string>();
+
+    const classes = useStyles();
 
     const activeActions = useActiveDataApprovalActions();
     const {
@@ -171,6 +176,17 @@ export const DataApprovalList: React.FC = React.memo(() => {
                 console.debug("Reloading", reloadKey);
                 setRows(getDataApprovalViews(objects));
                 setIsLoading(false);
+                setError(undefined);
+            } catch (err) {
+                // @ts-expect-error
+                const status = err?.response?.status;
+                if (status === 409) {
+                    setError(
+                        i18n.t(
+                            "The list could not be loaded because analytics jobs are currently running. Please try again in a few seconds by clicking 'Apply Filters'."
+                        )
+                    );
+                }
             } finally {
                 if (!isCancelled) {
                     setIsLoading(false);
@@ -222,6 +238,11 @@ export const DataApprovalList: React.FC = React.memo(() => {
 
     return (
         <React.Fragment>
+            {error && (
+                <section className={classes.errorContainer}>
+                    <Alert message={error} />
+                </section>
+            )}
             <ObjectsList<DataApprovalViewModel>
                 {...baseConfig}
                 globalActions={[periodsToggle]}
@@ -284,3 +305,7 @@ function getFilterOptions(config: Config, selectablePeriods: string[]) {
         approvalWorkflow: config.approvalWorkflow,
     };
 }
+
+const useStyles = makeStyles({
+    errorContainer: { paddingBlock: "1em" },
+});

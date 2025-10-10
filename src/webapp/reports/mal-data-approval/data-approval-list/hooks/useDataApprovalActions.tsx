@@ -43,6 +43,7 @@ export function useDataApprovalActions(): DataApprovalActionsState {
     const { compositionRoot } = useAppContext();
     const [reloadKey, reload] = useReload();
     const loading = useLoading();
+    const log = useCallback((msg: string) => loading.updateMessage(msg), [loading]);
     const { saveMonitoring: saveMonitoringValue } = useDataApprovalMonitoring();
 
     const [globalMessage, setGlobalMessage] = useState<GlobalMessage>();
@@ -150,14 +151,14 @@ export function useDataApprovalActions(): DataApprovalActionsState {
         async (selectedIds: string[]) => {
             const items = _.compact(selectedIds.map(item => parseDataDuplicationItemId(item)));
             if (items.length === 0) return;
-            loading.show(true, i18n.t("Submitting dataset"));
-            const result = await compositionRoot.malDataApproval.updateStatus(items, "approve");
+            loading.show(true, "Loading...");
+            const result = await compositionRoot.malDataApproval.updateStatus(items, "approve", log);
             if (!result) setGlobalMessage({ type: "error", message: i18n.t("Error when trying to submit data set") });
 
             reload();
             loading.hide();
         },
-        [compositionRoot.malDataApproval, reload, loading]
+        [compositionRoot.malDataApproval, reload, loading, log]
     );
 
     const closeDataDifferencesDialog = useCallback(() => {

@@ -6,6 +6,7 @@ import {
     PaginatedObjects,
     DataValueSetsPostRequest,
 } from "../../../types/d2-api";
+import i18n from "../../../locales";
 import { promiseMap, promiseMapConcurrent } from "../../../utils/promises";
 import { DataStoreStorageClient } from "../../common/clients/storage/DataStoreStorageClient";
 import { StorageClient } from "../../common/clients/storage/StorageClient";
@@ -33,6 +34,7 @@ import { Maybe } from "../../../types/utils";
 import { DataValueStats } from "../../../domain/common/entities/DataValueStats";
 import { approvalReportSettings } from "../../ApprovalReportData";
 import { DATA_ELEMENT_SUFFIX } from "../../../domain/common/entities/AppSettings";
+import { Log } from "../../../domain/reports/mal-data-approval/usecases/UpdateMalApprovalStatusUseCase";
 
 interface VariableHeaders {
     dataSets: string;
@@ -293,7 +295,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         }
     }
 
-    async approve(dataSets: MalDataApprovalItemIdentifier[]): Promise<boolean> {
+    async approve(dataSets: MalDataApprovalItemIdentifier[], log?: Log): Promise<boolean> {
         try {
             const originalDataSetId = dataSets[0]?.dataSet;
             if (!originalDataSetId) throw Error("No data set ID found");
@@ -351,8 +353,15 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
                 _.isEqual(_.omit(value, ["workflow"]), othervalue)
             );
 
-            const completeResponse = dataSetsToComplete.length !== 0 ? await this.complete(dataSetsToComplete) : true;
+            const shouldCompleteDataSet = dataSetsToComplete.length !== 0;
 
+            if (shouldCompleteDataSet) {
+                this.logMessage(log, i18n.t("Completing dataset..."));
+            }
+
+            const completeResponse = shouldCompleteDataSet ? await this.complete(dataSetsToComplete) : true;
+
+            this.logMessage(log, i18n.t("Submitting dataset..."));
             const response = await promiseMap(dataSets, async approval =>
                 this.api
                     .post<any>(
@@ -367,6 +376,10 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         } catch (error: any) {
             return false;
         }
+    }
+
+    private logMessage(log?: Log, message?: string): void {
+        if (log && message) log(message);
     }
 
     async getApprovalDataSetId(dataApprovalItems: { dataSet: Id }[]) {
