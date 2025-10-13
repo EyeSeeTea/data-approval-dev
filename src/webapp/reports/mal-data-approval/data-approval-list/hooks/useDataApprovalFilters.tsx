@@ -4,7 +4,7 @@ import { DropdownProps, MultipleDropdownProps } from "@eyeseetea/d2-ui-component
 import { useAppContext } from "../../../../contexts/app-context";
 import { DataSetsFilter } from "../Filters";
 import { OrgUnitsFilterButtonProps } from "../../../../components/org-units-filter/OrgUnitsFilterButton";
-import { getOrgUnitsFromId, getRootIds } from "../../../../../domain/common/entities/OrgUnit";
+import { getOrgUnitsFromId } from "../../../../../domain/common/entities/OrgUnit";
 import { OrgUnitWithChildren } from "../../../../../domain/reports/mal-data-approval/entities/OrgUnitWithChildren";
 
 type DataApprovalFilterProps = {
@@ -48,7 +48,7 @@ export function useDataApprovalFilters(filterProps: DataApprovalFilterProps): Da
         dataSetOrgUnits
     );
     const selectableIds = selectableOUs.map(ou => ou.id);
-    const rootIds = useMemo(() => getRootIds(selectableOUs), [selectableOUs]);
+    const rootIds = useMemo(() => config.currentUser.orgUnits.map(ou => ou.id), [config.currentUser.orgUnits]);
     const orgUnitsByPath = useMemo(() => _.keyBy(orgUnits, ou => ou.path), [orgUnits]);
 
     const setOrgUnitPaths = useCallback<OrgUnitsFilterButtonProps["setSelected"]>(

@@ -266,12 +266,8 @@ export class Dhis2ConfigRepository implements ConfigRepository {
                 fields: {
                     id: true,
                     displayName: true,
-                    dataViewOrganisationUnits: {
-                        id: true,
-                        displayName: toName,
-                        path: true,
-                        level: true,
-                    },
+                    organisationUnits: userOrgUnitFields,
+                    dataViewOrganisationUnits: userOrgUnitFields,
                     userCredentials: {
                         username: true,
                         userRoles: { id: true, name: true, authorities: true },
@@ -281,10 +277,19 @@ export class Dhis2ConfigRepository implements ConfigRepository {
             })
             .getData();
 
+        const viewOrgUnits = d2User.dataViewOrganisationUnits.map(ou => ({ ...ou, children: ou.children }));
+        const writeOrgUnits = d2User.organisationUnits.map(ou => ({ ...ou, children: ou.children }));
+
+        const orgUnits = _(viewOrgUnits)
+            .concat(writeOrgUnits)
+            .filter(ou => ou.level <= 3)
+            .unionBy(ou => ou.id)
+            .value();
+
         return {
             id: d2User.id,
             name: d2User.displayName,
-            orgUnits: d2User.dataViewOrganisationUnits.map(ou => ({ ...ou, children: [] })),
+            orgUnits: orgUnits,
             userGroups: d2User.userGroups,
             ...d2User.userCredentials,
             isAdmin: d2User.userCredentials.userRoles.some(role => role.authorities.includes("ALL")),
@@ -366,3 +371,11 @@ function getFilteredDataSets<DataSet extends NamedRef>(dataSets: DataSet[]): Dat
 const toName = { $fn: { name: "rename", to: "name" } } as const;
 
 type D2UserDataSetAccess = [string, UserDataSetAction];
+
+const userOrgUnitFields = {
+    id: true,
+    displayName: toName,
+    path: true,
+    level: true,
+    children: { id: true, displayName: toName, path: true, level: true },
+} as const;
