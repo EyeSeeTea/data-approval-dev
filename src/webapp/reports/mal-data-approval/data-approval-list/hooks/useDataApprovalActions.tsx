@@ -71,11 +71,10 @@ export function useDataApprovalActions(): DataApprovalActionsState {
             const result = await compositionRoot.malDataApproval.updateStatus(items, "duplicate");
             if (!result) setGlobalMessage({ type: "error", message: i18n.t("Error when trying to approve data set") });
 
-            saveMonitoringValue(items, true);
             reload();
             loading.hide();
         },
-        [compositionRoot.malDataApproval, reload, saveMonitoringValue, loading]
+        [compositionRoot.malDataApproval, reload, loading]
     );
 
     const updateCompletionStatus = useCallback(

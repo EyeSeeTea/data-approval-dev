@@ -68,16 +68,12 @@ export function useActiveDataApprovalActions(): ActiveDataApprovalActionsState {
     );
 
     const isGetDifferenceActionVisible = useCallback(
-        (rows: DataApprovalViewModel[]) =>
-            _.every(rows, row => {
+        (rows: DataApprovalViewModel[]) => {
+            return _.every(rows, row => {
                 const access = getDataSetAccess(config, row.dataSetUid);
-                return (
-                    row.lastUpdatedValue &&
-                    !row.validated &&
-                    Number(row.modificationCount) > 0 &&
-                    Boolean(access?.read || isMalAdmin)
-                );
-            }),
+                return row.lastUpdatedValue && Number(row.modificationCount) > 0 && Boolean(access?.read || isMalAdmin);
+            });
+        },
         [isMalAdmin, config]
     );
 
