@@ -71,7 +71,12 @@ export function useActiveDataApprovalActions(): ActiveDataApprovalActionsState {
         (rows: DataApprovalViewModel[]) => {
             return _.every(rows, row => {
                 const access = getDataSetAccess(config, row.dataSetUid);
-                return row.lastUpdatedValue && Number(row.modificationCount) > 0 && Boolean(access?.read || isMalAdmin);
+                return (
+                    row.lastUpdatedValue &&
+                    Number(row.modificationCount) > 0 &&
+                    access?.approve &&
+                    Boolean(access?.read || isMalAdmin)
+                );
             });
         },
         [isMalAdmin, config]
