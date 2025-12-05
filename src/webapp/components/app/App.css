@@ -1,0 +1,17 @@
+html {
+    background-color: white;
+    font-family: Roboto, Arial, sans-serif;
+}
+
+body {
+    margin: 0;
+}
+
+li {
+    line-height: 1.75;
+}
+
+table th,
+table td {
+    border: none !important;
+}

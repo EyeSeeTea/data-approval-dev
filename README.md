@@ -1,77 +1,47 @@
-## Setup
+## Introduction
+
+_d2-reports_ than can be used as an standalone DHIS2 webapp or an standard HTML report (App: Reports). DHIS2 versions tested: 2.34.
+
+## Reports
+
+### NHWA Comments
+
+This report shows data values for data sets `NHWA Module ...`. There are two kinds of data values displayed in the report table:
+
+1. Data values that have comments.
+2. Data values related pairs (value/comment), which are rendered as a single row. The pairing criteria is:
+
+    - Comment data element `NHWA_Comment of Abc`.
+    - Value data element: `NHWA_Abc`.
+
+The API endpoint `/dataValueSets` does not provide all the features we need, so we use a custom SQL View instead.
+
+## Initial setup
 
 ```
-$ nvm use # uses node version in .nvmrc
 $ yarn install
-```
-
-## Build
-
-Build a production distributable DHIS2 zip file:
-
-```
-$ yarn build
 ```
 
 ## Development
 
-Copy `.env` to `.env.local` and configure DHIS2 instance to use. Then start the development server:
+Start the development server at `http://localhost:8082` using `https://play.dhis2.org/2.34` as a backend:
 
 ```
-$ yarn start
+$ PORT=8082 REACT_APP_DHIS2_BASE_URL="https://play.dhis2.org/2.34" yarn start
 ```
 
-Now in your browser, go to `http://localhost:8081`.
+## Deploy
 
-## Tests
-
-```
-$ yarn test
-```
-
-## Some development tips
-
-### Clean architecture folder structure
-
--   `src/domain`: Domain layer of the app (entities, use cases, repository definitions)
--   `src/data`: Data of the app (repository implementations)
--   `src/webapp/pages`: Main React components.
--   `src/webapp/components`: React components.
--   `src/utils`: Misc utilities.
--   `i18n/`: Contains literal translations (gettext format)
--   `public/`: General non-React webapp resources.
-
-## Data structures
-
--   `Future.ts`: Async values, similar to promises, but cancellables and with type-safe errors.
--   `Collection.ts`: Similar to Lodash, provides a wrapper over JS arrays.
--   `Obj.ts`: Similar to Lodash, provides a wrapper over JS objects.
--   `HashMap.ts`: Similar to ES6 map, but immutable.
--   `Struct.ts`: Base class for typical classes with attributes. Features: create, update.
--   `Either.ts`: Either a success value or an error.
-
-## Docs
-
-We use [TypeDoc](https://typedoc.org/example/):
+Create an standard report:
 
 ```
-$ yarn generate-docs
+$ yarn build-report # Creates dist/index.html
+$ yarn build-<key>-metadata -u 'user:pass' --url http://dhis2-server.org # Creates dist/metadata.json (key is a particular report group, e.g. nhwa)
+$ yarn post-<key>-metadata -u 'user:pass' --url http://dhis2-server.org # Posts dist/metadata.json (key is a particular report group, e.g. nhwa)
 ```
 
-### i18n
-
-Update i18n .po files from `i18n.t(...)` calls in the source code:
+Create an standalone DHIS2 webapp app:
 
 ```
-$ yarn localize
+$ yarn build-webapp # Creates dist/d2-reports.zip
 ```
-
-### Scripts
-
-Check the example script, entry `"script-example"`in `package.json`->scripts and `src/scripts/example.ts`.
-
-### Misc Notes
-
--   Requests to DHIS2 will be transparently proxied (see `vite.config.ts` -> `server.proxy`) from `http://localhost:8081/dhis2/xyz` to `${VITE_DHIS2_BASE_URL}/xyz`. This prevents CORS and cross-domain problems.
-
--   You can use `.env` variables within the React app: `const value = import.meta.env.NAME;`

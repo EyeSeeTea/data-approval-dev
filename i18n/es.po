@@ -1,18 +1,42 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: i18next-conv\n"
-"POT-Creation-Date: 2024-06-26T10:58:19.149Z\n"
+"POT-Creation-Date: 2025-10-10T16:43:16.465Z\n"
 "PO-Revision-Date: 2018-10-25T09:02:35.143Z\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-msgid "Add"
-msgstr "Añadir"
+msgid "0"
+msgstr ""
 
-msgid "List"
-msgstr "Listar"
+msgid "Completing dataset..."
+msgstr ""
+
+msgid "Submitting dataset..."
+msgstr ""
+
+msgid "<No value>"
+msgstr ""
+
+msgid "LOG OUT"
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
+msgid "Loading..."
+msgstr ""
+
+msgid "Organisation unit"
+msgstr ""
+
+msgid "Select parent organisation unit"
+msgstr ""
+
+msgid "Clear"
+msgstr ""
 
 msgid "Back"
 msgstr "Volver"
@@ -20,11 +44,856 @@ msgstr "Volver"
 msgid "Help"
 msgstr "Ayuda"
 
-msgid "Hello {{name}}"
-msgstr "Hola {{name}}"
+msgid "Confirm Validation Reload"
+msgstr ""
 
-msgid "Detail page"
+msgid "Confirm"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid ""
+"This action will delete the stored data and process all the Indicators and "
+"Program Indicators from this DHIS2 instance."
+msgstr ""
+
+msgid "This will take a long time."
+msgstr ""
+
+msgid "Are you sure?"
+msgstr ""
+
+msgid "Metadata Admin Report"
+msgstr ""
+
+msgid "Objects with invalid sharing settings"
+msgstr ""
+
+msgid "Public Objects"
+msgstr ""
+
+msgid "Id"
+msgstr ""
+
+msgid "Metadata Type"
+msgstr ""
+
+msgid "Public Access"
+msgstr ""
+
+msgid "Created By"
+msgstr ""
+
+msgid "Last Updated By"
+msgstr ""
+
+msgid "User Group Accesses"
+msgstr ""
+
+msgid "User Accesses"
+msgstr ""
+
+msgid "name"
+msgstr ""
+
+msgid "lastUpdated"
+msgstr ""
+
+msgid "created"
+msgstr ""
+
+msgid "WIDP Admin Templates Report"
+msgstr ""
+
+msgid "List of users with not allowed roles"
+msgstr ""
+
+msgid "ID"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Username"
+msgstr ""
+
+msgid "Template Groups"
+msgstr ""
+
+msgid "Last login"
+msgstr ""
+
+msgid "Role"
+msgstr ""
+
+msgid "Unauthorized privileges"
+msgstr ""
+
+msgid "Search by username..."
+msgstr ""
+
+msgid "Advanced filters"
+msgstr ""
+
+msgid "Failed to load org units"
+msgstr ""
+
+msgid "Period"
+msgstr ""
+
+msgid "CSY Audit Filters - Emergency Care"
+msgstr ""
+
+msgid "Register ID"
+msgstr ""
+
+msgid "Yearly"
+msgstr ""
+
+msgid "Quarterly"
+msgstr ""
+
+msgid "Jan - March"
+msgstr ""
+
+msgid "April - June"
+msgstr ""
+
+msgid "July - September"
+msgstr ""
+
+msgid "October - December"
+msgstr ""
+
+msgid "Audit Type"
+msgstr ""
+
+msgid "Period Type"
+msgstr ""
+
+msgid "Year"
+msgstr ""
+
+msgid "Quarter"
+msgstr ""
+
+msgid "Overall Mortality in EU"
+msgstr ""
+
+msgid "Low acuity triage with EU disposition ICU"
+msgstr ""
+
+msgid "EU dispo = ICU AND Triage category = lowest acuity triage category"
+msgstr ""
+
+msgid "Highest triage category and time to first provider >30min​"
+msgstr ""
+
+msgid ""
+"Triage category = highest category AND time between EU arrival date and "
+"time  to Date and time seen by a  first treating provider > 30 min"
+msgstr ""
+
+msgid "Initial RBG low and Glucose not given"
+msgstr ""
+
+msgid "Initial RBG = Low AND Glucose not given at EU"
+msgstr ""
+
+msgid "Shock and IVF including Blood"
+msgstr ""
+
+msgid ""
+"(Age>=16 OR Age category = adult - age unknown) AND Initial SBP<90mmHg AND  "
+"(Section: Emergency Unit Interventions > Medications and Fluids) IV Fluids = "
+"not done"
+msgstr ""
+
+msgid "CSY Audit Filters - Trauma Care"
+msgstr ""
+
+msgid "Mortality with low injury severity score"
+msgstr ""
+
+msgid ""
+"(EU Disposition = Death) OR (Hospital Disposition = Death) AND (KTS=14-16) "
+"OR (MGAP=23-29) OR (GAP=19-24) OR (RTS=11-12)"
+msgstr ""
+
+msgid "Oxygen not administered for patients with hypoxia"
+msgstr ""
+
+msgid ""
+"Initial Oxygen Sat < 92 AND EU Procedures != Supplemental Oxygen "
+"Administration"
+msgstr ""
+
+msgid "Oxygen not administered for patients with tachypnea"
+msgstr ""
+
+msgid ""
+"Initial Spontaneous RR <12 OR >30 AND EU Procedures != Supplemental Oxygen "
+"Administration"
+msgstr ""
+
+msgid "Mental status-dependent airway maneuver"
+msgstr ""
+
+msgid ""
+"GCS total < 8 OR AVPU=(P OR U) AND EU Procedures ≠ Endotracheal intubation, "
+"Surgical airway, OR Assisted Ventilation"
+msgstr ""
+
+msgid "All mortality"
+msgstr ""
+
+msgid ""
+"EU Disposition = Mortuary or Died OR Hospital Disposition = Morgue or Died"
+msgstr ""
+
+msgid "Emergency Unit"
+msgstr ""
+
+msgid "EU Disposition = Mortuary or Died"
+msgstr ""
+
+msgid "Hospital Mortality"
+msgstr ""
+
+msgid "Hospital Disposition = Morgue or Died"
+msgstr ""
+
+msgid "Severe injuries by any scoring system"
+msgstr ""
+
+msgid "(KTS<11) OR (MGAP=3-17) OR (GAP=3-10) OR (RTS≤3)"
+msgstr ""
+
+msgid "Moderate or severe injuries by any scoring system"
+msgstr ""
+
+msgid "(KTS≤13) OR (MGAP≤22) OR (GAP≤18) OR (RTS≤10)"
+msgstr ""
+
+msgid "Moderate injuries by any scoring system"
+msgstr ""
+
+msgid "(KTS=11-13) OR (MGAP=18-22) OR (GAP=11-18) OR (RTS=4-10)"
+msgstr ""
+
+msgid "CSY Summary Report - Mortality by Injury Severity"
+msgstr ""
+
+msgid "Scoring System"
+msgstr ""
+
+msgid "Severity"
+msgstr ""
+
+msgid "Mortality"
+msgstr ""
+
+msgid "Total"
+msgstr ""
+
+msgid "Mortality Injury Severity"
+msgstr ""
+
+msgid "Summary Type"
+msgstr ""
+
+msgid "CSY Summary Report - Patient Characteristics"
+msgstr ""
+
+msgid "Group"
+msgstr ""
+
+msgid "Sub-Group"
+msgstr ""
+
+msgid "< 1 yr"
+msgstr ""
+
+msgid "1 - 4 yr"
+msgstr ""
+
+msgid "5 - 9 yr"
+msgstr ""
+
+msgid "10 - 14 yr"
+msgstr ""
+
+msgid "15 - 19 yr"
+msgstr ""
+
+msgid "20 - 40 yr"
+msgstr ""
+
+msgid "40 - 60 yr"
+msgstr ""
+
+msgid "60 - 80 yr"
+msgstr ""
+
+msgid "80+ yr"
+msgstr ""
+
+msgid "Unknown"
+msgstr ""
+
+msgid "Patient Characteristics"
+msgstr ""
+
+msgid "Last Updated"
+msgstr ""
+
+msgid "Denominator"
+msgstr ""
+
+msgid "Valid denominator"
+msgstr ""
+
+msgid "Valid"
+msgstr ""
+
+msgid "Invalid"
+msgstr ""
+
+msgid "Numerator"
+msgstr ""
+
+msgid "Valid Numerator"
+msgstr ""
+
+msgid "Expression"
+msgstr ""
+
+msgid "Valid expression"
+msgstr ""
+
+msgid "Filter"
+msgstr ""
+
+msgid "Valid filter"
+msgstr ""
+
+msgid "Empty"
+msgstr ""
+
+msgid "Reload Validation"
+msgstr ""
+
+msgid "Indicators"
+msgstr ""
+
+msgid "Program Indicators"
+msgstr ""
+
+msgid "Data quality"
+msgstr ""
+
+msgid "GLASS Admin Maintenance Report"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "File"
+msgstr ""
+
+msgid "Country"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Delete all incomplete files"
+msgstr ""
+
+msgid "Module"
+msgstr ""
+
+msgid "Patch"
+msgstr ""
+
+msgid " "
+msgstr ""
+
+msgid "Current Version"
+msgstr ""
+
+msgid "Uploaded date"
+msgstr ""
+
+msgid "Upload new ATC file"
+msgstr ""
+
+msgid "Recalculation Ongoing..."
+msgstr ""
+
+msgid "Cancel recalculation"
+msgstr ""
+
+msgid "Recalculate logic"
+msgstr ""
+
+msgid "Last recalculation was done with {{previousVersion}}"
+msgstr ""
+
+msgid "RECALCULATE all existing submissions with {{currentVersion}}"
+msgstr ""
+
+msgid "There is no UNDO for this action"
+msgstr ""
+
+msgid "Continue"
+msgstr ""
+
+msgid "Select File"
+msgstr ""
+
+msgid "Version has been successfully patched"
+msgstr ""
+
+msgid "Upload finished"
+msgstr ""
+
+msgid "Recalculation has been cancelled successfully"
+msgstr ""
+
+msgid ""
+"Please go to the program {{loggerProgram}} to see the logs of this "
+"recalculation"
+msgstr ""
+
+msgid "Error when saving recalculation logic"
+msgstr ""
+
+msgid "GLASS Data Submission Report"
+msgstr ""
+
+msgid "Questionnaire completed"
+msgstr ""
+
+msgid "DataSets uploaded"
+msgstr ""
+
+msgid "Go to GLASS Unapproved Dashboard"
+msgstr ""
+
+msgid "Approve"
+msgstr ""
+
+msgid "Accept"
+msgstr ""
+
+msgid "Reject"
+msgstr ""
+
+msgid "Reopen Submission"
+msgstr ""
+
+msgid "Creation Date"
+msgstr ""
+
+msgid "Level of Confidentiality"
+msgstr ""
+
+msgid "Go to Signal"
+msgstr ""
+
+msgid "Reject Signal"
+msgstr ""
+
+msgid "Reject Data Submission"
+msgstr ""
+
+msgid "Not Completed"
+msgstr ""
+
+msgid "Data to be approved by country"
+msgstr ""
+
+msgid "Waiting WHO Approval"
+msgstr ""
+
+msgid "Rejected By WHO"
+msgstr ""
+
+msgid "Approved"
+msgstr ""
+
+msgid "Data update request accepted"
+msgstr ""
+
+msgid "Waiting for WHO to approve your update request"
+msgstr ""
+
+msgid "Draft"
+msgstr ""
+
+msgid "January-March"
+msgstr ""
+
+msgid "April-June"
+msgstr ""
+
+msgid "July-September"
+msgstr ""
+
+msgid "October-December"
+msgstr ""
+
+msgid "Completed"
+msgstr ""
+
+msgid "Not completed"
+msgstr ""
+
+msgid "Years"
+msgstr ""
+
+msgid "Quarters"
+msgstr ""
+
+msgid "Apply filters"
+msgstr ""
+
+msgid "Clear filters"
+msgstr ""
+
+msgid "Data submissions have been successfully {{action}}"
+msgstr ""
+
+msgid "Error when trying to {{action}} submission"
+msgstr ""
+
+msgid "Signals have been successfully approved"
+msgstr ""
+
+msgid "Error when trying to approve signal"
+msgstr ""
+
+msgid "Data submissions have been successfully rejected"
+msgstr ""
+
+msgid "Error when trying to reject submission"
+msgstr ""
+
+msgid "Signals have been successfully rejected"
+msgstr ""
+
+msgid "Error when trying to reject signal"
+msgstr ""
+
+msgid "Data Element"
+msgstr ""
+
+msgid "Value entered"
+msgstr ""
+
+msgid "Comment"
+msgstr ""
+
+msgid "Approved value"
+msgstr ""
+
+msgid "Approved value comment"
+msgstr ""
+
+msgid "Approve value"
+msgstr ""
+
+msgid "Approving data values"
+msgstr ""
+
+msgid "Error when trying to approve data values"
+msgstr ""
+
+msgid "Error when trying to check difference in data values"
+msgstr ""
+
+msgid "Data Approval Report"
+msgstr ""
+
+msgid "Complete"
+msgstr ""
+
+msgid "Incomplete"
+msgstr ""
+
+msgid "Submit"
+msgstr ""
+
+msgid "Revoke"
+msgstr ""
+
+msgid "Check Difference"
+msgstr ""
+
+msgid ""
+"The list could not be loaded because analytics jobs are currently running. "
+"Please try again in a few seconds by clicking 'Apply Filters'."
+msgstr ""
+
+msgid "Check differences"
+msgstr ""
+
+msgid "Submitted"
+msgstr ""
+
+msgid "Ready for submission"
+msgstr ""
+
+msgid "Not Approved"
+msgstr ""
+
+msgid "Greater than 0"
+msgstr ""
+
+msgid "Data sets"
+msgstr ""
+
+msgid "Periods"
+msgstr ""
+
+msgid "Completion status"
+msgstr ""
+
+msgid "Submission status"
+msgstr ""
+
+msgid "Approval status"
+msgstr ""
+
+msgid "Modification Count"
+msgstr ""
+
+msgid "Error when trying to approve data set"
+msgstr ""
+
+msgid "Completing dataset"
+msgstr ""
+
+msgid "Updating status to incomplete"
+msgstr ""
+
+msgid "Revoking dataset"
+msgstr ""
+
+msgid "Error when trying to unsubmit data set"
+msgstr ""
+
+msgid "Error when trying to submit data set"
+msgstr ""
+
+msgid "Data set"
+msgstr ""
+
+msgid "Attribute"
+msgstr ""
+
+msgid "Not approved"
+msgstr ""
+
+msgid "Last modification date"
+msgstr ""
+
+msgid "Last date of submission"
+msgstr ""
+
+msgid "Last date of approval"
+msgstr ""
+
+msgid "Malaria Data Subscription Report"
+msgstr ""
+
+msgid "Subscription status"
+msgstr ""
+
+msgid "Sections"
+msgstr ""
+
+msgid "Last Date of Subscription"
+msgstr ""
+
+msgid "Subscribe"
+msgstr ""
+
+msgid "Subscribe to selected items"
+msgstr ""
+
+msgid "Unsubscribe"
+msgstr ""
+
+msgid "Unsubscribe to selected items"
+msgstr ""
+
+msgid "Subscribed raw elements"
+msgstr ""
+
+msgid "Subscribe to all children"
+msgstr ""
+
+msgid "Unsubscribe to all children"
+msgstr ""
+
+msgid "Data Elements"
+msgstr ""
+
+msgid "Dashboards"
+msgstr ""
+
+msgid "Visualizations"
+msgstr ""
+
+msgid "Element Type"
+msgstr ""
+
+msgid "Subscription Status"
 msgstr ""
 
 msgid "Section"
-msgstr "Sección"
+msgstr ""
+
+msgid "Data Element Groups"
+msgstr ""
+
+msgid "NHWA Data Approval Status Report"
+msgstr ""
+
+msgid "Last updated value"
+msgstr ""
+
+msgid "Error when trying to complete data set"
+msgstr ""
+
+msgid "Error when trying to incomplete data set"
+msgstr ""
+
+msgid "Approving data sets..."
+msgstr ""
+
+msgid "Unapprove"
+msgstr ""
+
+msgid "Unapproving data sets..."
+msgstr ""
+
+msgid "Error when trying to unapprove data set"
+msgstr ""
+
+msgid "Category Option Combo"
+msgstr ""
+
+msgid "Organisation Unit"
+msgstr ""
+
+msgid "Correct Value"
+msgstr ""
+
+msgid "Current value"
+msgstr ""
+
+msgid "Fix all incorrect values"
+msgstr ""
+
+msgid "Updating values..."
+msgstr ""
+
+msgid "NHWA Comments Report"
+msgstr ""
+
+msgid "Category option combo"
+msgstr ""
+
+msgid "Value"
+msgstr ""
+
+msgid "Last updated"
+msgstr ""
+
+msgid "Stored by"
+msgstr ""
+
+msgid "Toggle filters"
+msgstr ""
+
+msgid "No values to update"
+msgstr ""
+
+msgid "Occupation"
+msgstr ""
+
+msgid "Practising"
+msgstr ""
+
+msgid "Professionally Active"
+msgstr ""
+
+msgid "Licensed To Practice"
+msgstr ""
+
+msgid "Correct total"
+msgstr ""
+
+msgid "Comment to Assign"
+msgstr ""
+
+msgid "Fix Total"
+msgstr ""
+
+msgid "Fix Incorrect Totals"
+msgstr ""
+
+msgid ""
+"Module 1 totals by Activity Label with missing value that does not match the "
+"auto-calculated"
+msgstr ""
+
+msgid "Organisation Unit Parent"
+msgstr ""
+
+msgid "Name To Fix"
+msgstr ""
+
+msgid "Dismiss"
+msgstr ""
+
+msgid "Module 1 (subnational) with fixes for organisation unit name"
+msgstr ""
+
+msgid "User Two Factor Monitoring"
+msgstr ""
+
+msgid "External auth"
+msgstr ""
+
+msgid "TwoFA"
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid "User groups"
+msgstr ""
+
+msgid "Open ID"
+msgstr ""
+
+msgctxt "Facility Dispo = Morgue or Died"
+msgid "ETA_EU Dispo = Morgue or Died or ETA"
+msgstr ""
+
+#~ msgid "Add"
+#~ msgstr "Añadir"
+
+#~ msgid "List"
+#~ msgstr "Listar"
+
+#~ msgid "Click to show feedback"
+#~ msgstr "Toca para ver feedback"
