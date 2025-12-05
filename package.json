@@ -200,10 +200,10 @@
         "wait-on": "6.0.0"
     },
     "manifest.webapp": {
-        "name": "DHIS2 Reports",
-        "description": "DHIS2 Reports",
+        "name": "NHWA Approval Report",
+        "description": "NHWA Approval Report",
         "icons": {
-            "48": "icon.png"
+            "48": "mal-icon.png"
         },
         "developer": {
             "url": "https://www.eyeseetea.com/",
