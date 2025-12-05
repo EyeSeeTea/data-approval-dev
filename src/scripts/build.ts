@@ -10,7 +10,7 @@ export async function build(): Promise<void> {
     const report = process.env.REACT_APP_REPORT_VARIANT;
     console.debug(`Report type: ${report}`);
     console.debug("Building DHIS2 Approval Report");
-    run("yarn mal-build");
+    run("yarn nhwa-build");
 }
 
 async function main() {
