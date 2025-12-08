@@ -5,8 +5,8 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"POT-Creation-Date: 2025-12-08T19:45:17.271Z\n"
-"PO-Revision-Date: 2025-12-08T19:45:17.271Z\n"
+"POT-Creation-Date: 2025-12-08T20:58:01.749Z\n"
+"PO-Revision-Date: 2025-12-08T20:58:01.749Z\n"
 
 msgid "0"
 msgstr ""
@@ -71,6 +71,9 @@ msgstr ""
 msgid "Edit"
 msgstr ""
 
+msgid "Delete"
+msgstr ""
+
 msgid "<No value>"
 msgstr ""
 
@@ -116,6 +119,12 @@ msgid "This will take a long time."
 msgstr ""
 
 msgid "Are you sure?"
+msgstr ""
+
+msgid "Delete DataSet Configuration"
+msgstr ""
+
+msgid "Are you sure you want to delete this DataSet Configuration?"
 msgstr ""
 
 msgid "Edit Configuration"
@@ -456,9 +465,6 @@ msgid "Data quality"
 msgstr ""
 
 msgid "GLASS Admin Maintenance Report"
-msgstr ""
-
-msgid "Delete"
 msgstr ""
 
 msgid "File"
