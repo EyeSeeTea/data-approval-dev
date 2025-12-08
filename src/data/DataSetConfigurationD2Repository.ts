@@ -9,6 +9,11 @@ export class DataSetConfigurationD2Repository implements DataSetConfigurationRep
     private dataStoreUrl = `/dataStore/${this.namespace}`;
     constructor(private api: D2Api) {}
 
+    remove(id: string): FutureData<void> {
+        const dataStore = this.api.dataStore(this.namespace);
+        return apiToFuture(dataStore.delete(`DS_${id}`)).toVoid();
+    }
+
     getByCode(code: string): FutureData<DataSetConfiguration> {
         const dataStore = this.api.dataStore(this.namespace);
         return apiToFuture(dataStore.get<DataSetConfiguration>(`DS_${code}`)).flatMap(data => {

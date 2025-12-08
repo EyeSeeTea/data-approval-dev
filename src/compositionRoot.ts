@@ -122,6 +122,7 @@ import { MetadataEntityD2Repository } from "./data/MetadataEntityD2Repository";
 import { GetMetadataEntitiesUseCase } from "./domain/usecases/GetMetadataEntitiesUseCase";
 import { SaveDataSetConfigurationUseCase } from "./domain/usecases/SaveDataSetConfigurationUseCase";
 import { GetApprovalConfigurationsUseCase } from "./domain/usecases/GetApprovalConfigurationsUseCase";
+import { RemoveDataSetConfigurationUseCase } from "./domain/usecases/RemoveDataSetConfigurationUseCase";
 
 export function getCompositionRoot(api: D2Api) {
     const configRepository = new Dhis2ConfigRepository(api, getReportType());
@@ -172,6 +173,7 @@ export function getCompositionRoot(api: D2Api) {
             getAll: new GetDataSetConfigurationsUseCase({ dataSetConfigurationRepository, userRepository }),
             getByCode: new GetDataSetConfigurationByCodeUseCase({ dataSetConfigurationRepository, userRepository }),
             save: new SaveDataSetConfigurationUseCase({ dataSetConfigurationRepository, userRepository }),
+            remove: new RemoveDataSetConfigurationUseCase({ dataSetConfigurationRepository, userRepository }),
             getDataSets: new GetApprovalConfigurationsUseCase({
                 dataSetConfigurationRepository,
                 userRepository,
