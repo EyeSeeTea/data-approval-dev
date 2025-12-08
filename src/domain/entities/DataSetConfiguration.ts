@@ -138,20 +138,11 @@ export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
             revoke: DataSetConfiguration.EMPTY_PERMISSIONS,
             submit: DataSetConfiguration.EMPTY_PERMISSIONS,
             approve: DataSetConfiguration.EMPTY_PERMISSIONS,
-            monitoring: DataSetConfiguration.EMPTY_PERMISSIONS,
         };
     }
 }
 
-export const dataSetConfigurationActions = [
-    "read",
-    "complete",
-    "incomplete",
-    "revoke",
-    "submit",
-    "approve",
-    "monitoring",
-] as const;
+export const dataSetConfigurationActions = ["read", "complete", "incomplete", "revoke", "submit", "approve"] as const;
 
 export type DataSetConfigurationAction = typeof dataSetConfigurationActions[number];
 type DataSetConfigurationError = ValidationError<DataSetConfigurationAttrs>;
