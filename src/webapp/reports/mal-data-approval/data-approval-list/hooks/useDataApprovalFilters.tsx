@@ -6,10 +6,12 @@ import { DataSetsFilter } from "../Filters";
 import { OrgUnitsFilterButtonProps } from "../../../../components/org-units-filter/OrgUnitsFilterButton";
 import { getOrgUnitsFromId } from "../../../../../domain/common/entities/OrgUnit";
 import { OrgUnitWithChildren } from "../../../../../domain/reports/mal-data-approval/entities/OrgUnitWithChildren";
+import { DataSetWithConfigPermissions } from "../../../../../domain/usecases/GetApprovalConfigurationsUseCase";
 
 type DataApprovalFilterProps = {
     values: DataSetsFilter;
     onChange: (filter: DataSetsFilter) => void;
+    dataSetsConfig: DataSetWithConfigPermissions[];
 };
 
 type DataApprovalFilterState = {
@@ -31,7 +33,7 @@ type DataApprovalFilterState = {
 
 export function useDataApprovalFilters(filterProps: DataApprovalFilterProps): DataApprovalFilterState {
     const { config, compositionRoot } = useAppContext();
-    const initialDataSetIds = Object.keys(config.dataSets);
+    const initialDataSetIds = filterProps.dataSetsConfig.map(ds => ds.dataSet.id);
     const { values: filter, onChange } = filterProps;
     const { orgUnitPaths } = filter;
 

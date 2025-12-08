@@ -1,7 +1,6 @@
 import _ from "lodash";
 import { UseCase } from "../../../../compositionRoot";
 import { PaginatedObjects, Sorting } from "../../../common/entities/PaginatedObjects";
-import { AppSettingsRepository } from "../../../common/repositories/AppSettingsRepository";
 import { DataSetRepository } from "../../../common/repositories/DataSetRepository";
 import { DataValuesRepository } from "../../../common/repositories/DataValuesRepository";
 import { WmrDiffReport } from "../../WmrDiffReport";
@@ -11,14 +10,9 @@ import { MalDataApprovalOptions } from "../repositories/MalDataApprovalRepositor
 type GetDataDiffUseCaseOptions = Omit<MalDataApprovalOptions, "sorting"> & { sorting: Sorting<DataDiffItem> };
 
 export class GetMalDataDiffUseCase implements UseCase {
-    constructor(
-        private dataValueRepository: DataValuesRepository,
-        private dataSetRepository: DataSetRepository,
-        private appSettings: AppSettingsRepository
-    ) {}
+    constructor(private dataValueRepository: DataValuesRepository, private dataSetRepository: DataSetRepository) {}
 
     async execute(options: GetDataDiffUseCaseOptions): Promise<PaginatedObjects<DataDiffItem>> {
-        const settings = await this.appSettings.get();
         const malariaDataSetId = options.dataSetId;
         const orgUnitId = _(options.orgUnitIds).first();
         const period = _(options.periods).first();
@@ -29,7 +23,7 @@ export class GetMalDataDiffUseCase implements UseCase {
         const dataElementsWithValues = await new WmrDiffReport(
             this.dataValueRepository,
             this.dataSetRepository,
-            settings
+            options.dataSetsConfig
         ).getDiff(malariaDataSetId, orgUnitId, period);
 
         return {

@@ -48,7 +48,7 @@ export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
     };
 
     const updateDataSource = (entity: TableEntity) => {
-        const newConfiguration = configuration.updateDataSourceId(entity.name);
+        const newConfiguration = configuration.updateDataSourceId(entity.id);
         onChange(newConfiguration);
     };
 

@@ -1,16 +1,15 @@
 import { useCallback } from "react";
 import _ from "lodash";
 import { DataApprovalViewModel } from "../../DataApprovalViewModel";
-import { useDataApprovalPermissions } from "./useDataApprovalPermissions";
 import { Id } from "../../../../../domain/common/entities/Base";
 import { useAppContext } from "../../../../contexts/app-context";
 import { Config } from "../../../../../domain/common/entities/Config";
+import { DataSetWithConfigPermissions } from "../../../../../domain/usecases/GetApprovalConfigurationsUseCase";
+import { DataSetConfigurationAction } from "../../../../../domain/entities/DataSetConfiguration";
 
 type ActiveDataApprovalActionsState = {
-    isActivateMonitoringActionVisible: (rows: DataApprovalViewModel[]) => boolean;
     isApproveActionVisible: (rows: DataApprovalViewModel[]) => boolean;
     isCompleteActionVisible: (rows: DataApprovalViewModel[]) => boolean;
-    isDeactivateMonitoringActionVisible: (rows: DataApprovalViewModel[]) => boolean;
     isGetDifferenceActionVisible: (rows: DataApprovalViewModel[]) => boolean;
     isGetDifferenceAndRevokeActionVisible: (rows: DataApprovalViewModel[]) => boolean;
     isIncompleteActionVisible: (rows: DataApprovalViewModel[]) => boolean;
@@ -18,111 +17,139 @@ type ActiveDataApprovalActionsState = {
     isSubmitActionVisible: (rows: DataApprovalViewModel[]) => boolean;
 };
 
-function getDataSetAccess(config: Config, dataSetId: Id) {
-    const access = config.currentUser.dataSets ? config.currentUser.dataSets[dataSetId] : undefined;
-    return access;
+function getDataSetAccess(options: {
+    action: DataSetConfigurationAction;
+    user: Config["currentUser"];
+    dataSetsConfig: DataSetWithConfigPermissions[];
+    dataSetId: Id;
+}) {
+    const { action, user, dataSetsConfig, dataSetId } = options;
+    const dataSetConfig = dataSetsConfig.find(ds => ds.dataSet.id === dataSetId);
+    const hasAccess = dataSetConfig?.configuration.canUserPerformAction(
+        action,
+        user.username,
+        user.userGroups.map(ug => ug.code),
+        user.isAdmin
+    );
+    return hasAccess;
 }
 
-export function useActiveDataApprovalActions(): ActiveDataApprovalActionsState {
+export function useActiveDataApprovalActions(props: {
+    dataSetsConfig: DataSetWithConfigPermissions[];
+}): ActiveDataApprovalActionsState {
+    const { dataSetsConfig } = props;
     const { config } = useAppContext();
-    const { isMalAdmin } = useDataApprovalPermissions();
-
-    const isActivateMonitoringActionVisible = useCallback(
-        (rows: DataApprovalViewModel[]) => {
-            return _(rows).every(row => {
-                const access = getDataSetAccess(config, row.dataSetUid);
-                return !row.monitoring && Boolean(isMalAdmin || access?.monitoring);
-            });
-        },
-        [isMalAdmin, config]
-    );
 
     const isApproveActionVisible = useCallback(
         (rows: DataApprovalViewModel[]) => {
             return _.every(rows, row => {
-                const access = getDataSetAccess(config, row.dataSetUid);
-                return (
-                    row.lastUpdatedValue && Number(row.modificationCount) > 0 && Boolean(isMalAdmin || access?.approve)
-                );
+                const hasAccess = getDataSetAccess({
+                    action: "approve",
+                    user: config.currentUser,
+                    dataSetsConfig,
+                    dataSetId: row.dataSetUid,
+                });
+                return row.lastUpdatedValue && Number(row.modificationCount) > 0 && hasAccess;
             });
         },
-        [isMalAdmin, config]
+        [config.currentUser, dataSetsConfig]
     );
 
     const isCompleteActionVisible = useCallback(
         (rows: DataApprovalViewModel[]) =>
             _.every(rows, row => {
-                const access = getDataSetAccess(config, row.dataSetUid);
-                return !row.completed && row.lastUpdatedValue && Boolean(isMalAdmin || access?.complete);
+                const hasAccess = getDataSetAccess({
+                    action: "complete",
+                    user: config.currentUser,
+                    dataSetsConfig,
+                    dataSetId: row.dataSetUid,
+                });
+                return !row.completed && row.lastUpdatedValue && Boolean(hasAccess);
             }),
-        [isMalAdmin, config]
-    );
-
-    const isDeactivateMonitoringActionVisible = useCallback(
-        (rows: DataApprovalViewModel[]) =>
-            _.every(rows, row => {
-                const access = getDataSetAccess(config, row.dataSetUid);
-                return row.monitoring && Boolean(isMalAdmin || access?.monitoring);
-            }),
-        [isMalAdmin, config]
+        [config.currentUser, dataSetsConfig]
     );
 
     const isGetDifferenceActionVisible = useCallback(
         (rows: DataApprovalViewModel[]) => {
             return _.every(rows, row => {
-                const access = getDataSetAccess(config, row.dataSetUid);
-                return (
-                    row.lastUpdatedValue &&
-                    Number(row.modificationCount) > 0 &&
-                    access?.approve &&
-                    Boolean(access?.read || isMalAdmin)
-                );
+                const hasApproveAccess = getDataSetAccess({
+                    action: "approve",
+                    user: config.currentUser,
+                    dataSetsConfig,
+                    dataSetId: row.dataSetUid,
+                });
+
+                const hasReadAccess = getDataSetAccess({
+                    action: "read",
+                    user: config.currentUser,
+                    dataSetsConfig,
+                    dataSetId: row.dataSetUid,
+                });
+                return row.lastUpdatedValue && Number(row.modificationCount) > 0 && hasApproveAccess && hasReadAccess;
             });
         },
-        [isMalAdmin, config]
+        [dataSetsConfig, config.currentUser]
     );
 
     const isGetDifferenceAndRevokeActionVisible = useCallback(
         (rows: DataApprovalViewModel[]) =>
             _.every(rows, row => {
-                const access = getDataSetAccess(config, row.dataSetUid);
-                return row.lastUpdatedValue && row.validated && Boolean(access?.read || isMalAdmin);
+                const hasReadAccess = getDataSetAccess({
+                    action: "read",
+                    user: config.currentUser,
+                    dataSetsConfig,
+                    dataSetId: row.dataSetUid,
+                });
+                return row.lastUpdatedValue && row.validated && hasReadAccess;
             }),
-        [isMalAdmin, config]
+        [dataSetsConfig, config.currentUser]
     );
 
     const isIncompleteActionVisible = useCallback(
         (rows: DataApprovalViewModel[]) =>
             _.every(rows, row => {
-                const access = getDataSetAccess(config, row.dataSetUid);
-                return row.completed && !row.validated && Boolean(isMalAdmin || access?.incomplete);
+                const access = getDataSetAccess({
+                    action: "incomplete",
+                    user: config.currentUser,
+                    dataSetsConfig,
+                    dataSetId: row.dataSetUid,
+                });
+                return row.completed && !row.validated && access;
             }),
-        [isMalAdmin, config]
+        [dataSetsConfig, config.currentUser]
     );
 
     const isSubmitActionVisible = useCallback(
         (rows: DataApprovalViewModel[]) =>
             _.every(rows, row => {
-                const access = getDataSetAccess(config, row.dataSetUid);
-                return !row.approved && row.lastUpdatedValue && Boolean(access?.submit || isMalAdmin);
+                const access = getDataSetAccess({
+                    action: "submit",
+                    user: config.currentUser,
+                    dataSetsConfig,
+                    dataSetId: row.dataSetUid,
+                });
+                return !row.approved && row.lastUpdatedValue && access;
             }),
-        [isMalAdmin, config]
+        [dataSetsConfig, config.currentUser]
     );
 
     const isRevokeActionVisible = useCallback(
         (rows: DataApprovalViewModel[]) =>
             _.every(rows, row => {
-                const access = getDataSetAccess(config, row.dataSetUid);
-                return row.approved && Boolean(isMalAdmin || access?.revoke);
+                const access = getDataSetAccess({
+                    action: "revoke",
+                    user: config.currentUser,
+                    dataSetsConfig,
+                    dataSetId: row.dataSetUid,
+                });
+                return row.approved && access;
             }),
-        [isMalAdmin, config]
+        [dataSetsConfig, config.currentUser]
     );
 
     return {
-        isActivateMonitoringActionVisible: isActivateMonitoringActionVisible,
         isApproveActionVisible: isApproveActionVisible,
         isCompleteActionVisible: isCompleteActionVisible,
-        isDeactivateMonitoringActionVisible: isDeactivateMonitoringActionVisible,
         isGetDifferenceActionVisible: isGetDifferenceActionVisible,
         isGetDifferenceAndRevokeActionVisible: isGetDifferenceAndRevokeActionVisible,
         isIncompleteActionVisible: isIncompleteActionVisible,

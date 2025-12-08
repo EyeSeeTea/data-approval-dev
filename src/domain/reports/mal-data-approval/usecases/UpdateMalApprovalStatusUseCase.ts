@@ -7,6 +7,7 @@ import { MalDataApprovalItemIdentifier } from "../entities/MalDataApprovalItem";
 import { MalDataApprovalRepository } from "../repositories/MalDataApprovalRepository";
 import { DataDiffItemIdentifier } from "../entities/DataDiffItem";
 import { AppSettingsRepository } from "../../../common/repositories/AppSettingsRepository";
+import { DataSetWithConfigPermissions } from "../../../usecases/GetApprovalConfigurationsUseCase";
 
 export class UpdateMalApprovalStatusUseCase {
     constructor(
@@ -16,7 +17,13 @@ export class UpdateMalApprovalStatusUseCase {
         private appSettingsRepository: AppSettingsRepository
     ) {}
 
-    async execute(items: MalDataApprovalItemIdentifier[], action: UpdateAction, log?: Log): Promise<boolean> {
+    async execute(options: {
+        items: MalDataApprovalItemIdentifier[];
+        action: UpdateAction;
+        log?: Log;
+        dataSetsConfig: DataSetWithConfigPermissions[];
+    }): Promise<boolean> {
+        const { items, action, log, dataSetsConfig } = options;
         const itemsByDataSet = _(items)
             .groupBy(item => item.dataSet)
             .value();
@@ -38,7 +45,7 @@ export class UpdateMalApprovalStatusUseCase {
                     return this.approvalRepository.approve(itemsToUpdate, log);
                 case "duplicate": {
                     // "Approve" in UI
-                    const dataElementsWithValues = await this.getDataElementsToDuplicate(itemsToUpdate);
+                    const dataElementsWithValues = await this.getDataElementsToDuplicate(itemsToUpdate, dataSetsConfig);
                     const stats = await this.approvalRepository.replicateDataValuesInApvdDataSet(
                         dataElementsWithValues
                     );
@@ -60,11 +67,11 @@ export class UpdateMalApprovalStatusUseCase {
     }
 
     private async getDataElementsToDuplicate(
-        items: MalDataApprovalItemIdentifier[]
+        items: MalDataApprovalItemIdentifier[],
+        dataSetsConfig: DataSetWithConfigPermissions[]
     ): Promise<DataDiffItemIdentifier[]> {
-        const settings = await this.appSettingsRepository.get();
         const dataElementsWithValues = await promiseMap(items, async item => {
-            return await new WmrDiffReport(this.dataValueRepository, this.dataSetRepository, settings).getDiff(
+            return await new WmrDiffReport(this.dataValueRepository, this.dataSetRepository, dataSetsConfig).getDiff(
                 item.dataSet,
                 item.orgUnit,
                 item.period

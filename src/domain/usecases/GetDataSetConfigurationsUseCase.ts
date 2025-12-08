@@ -2,37 +2,23 @@ import { DataSetConfiguration } from "../entities/DataSetConfiguration";
 import { FutureData } from "../generic/Future";
 import { DataSetConfigurationRepository } from "../repositories/DataSetConfigurationRepository";
 import { UserRepository } from "../repositories/UserRepository";
+import { UCDataSetConfiguration } from "./helpers/UCDataSetConfiguration";
 
 export class GetDataSetConfigurationsUseCase {
+    private UCDataSetConfiguration: UCDataSetConfiguration;
     constructor(
         private options: {
             dataSetConfigurationRepository: DataSetConfigurationRepository;
             userRepository: UserRepository;
         }
-    ) {}
+    ) {
+        this.UCDataSetConfiguration = new UCDataSetConfiguration({
+            dataSetConfigurationRepository: this.options.dataSetConfigurationRepository,
+            userRepository: this.options.userRepository,
+        });
+    }
 
     execute(): FutureData<DataSetConfiguration[]> {
-        return this.options.userRepository.getCurrent().flatMap(currentUser => {
-            const userGroupIds = currentUser.userGroups.map(group => group.code);
-
-            return this.options.dataSetConfigurationRepository.getAll().map(dataSetConfigs => {
-                // If user is super admin, return all configurations
-                if (currentUser.isSuperAdmin) {
-                    return dataSetConfigs;
-                }
-
-                // Filter configurations based on user permissions
-                const filteredConfigurations = dataSetConfigs.filter(config => {
-                    return config.canUserPerformAction(
-                        "read",
-                        currentUser.username,
-                        userGroupIds,
-                        currentUser.isSuperAdmin
-                    );
-                });
-
-                return filteredConfigurations;
-            });
-        });
+        return this.UCDataSetConfiguration.getConfigurations();
     }
 }

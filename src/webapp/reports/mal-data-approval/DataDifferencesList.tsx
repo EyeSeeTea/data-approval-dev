@@ -19,15 +19,17 @@ import { DataDiffViewModel, getDataDiffViews } from "./DataDiffViewModel";
 import { ThumbUp } from "@material-ui/icons";
 import { parseDataDuplicationItemId } from "../../../domain/reports/mal-data-approval/entities/MalDataApprovalItem";
 import { emptyPage, Sorting } from "../../../domain/common/entities/PaginatedObjects";
+import { DataSetWithConfigPermissions } from "../../../domain/usecases/GetApprovalConfigurationsUseCase";
 
 interface DataDifferencesListProps {
     selectedIds: string[];
     revoke: boolean;
     isUpdated: () => void;
     dataSetId: string;
+    dataSetsConfig: DataSetWithConfigPermissions[];
 }
 
-export const DataDifferencesList: React.FC<DataDifferencesListProps> = ({ selectedIds, isUpdated }) => {
+export const DataDifferencesList: React.FC<DataDifferencesListProps> = ({ selectedIds, isUpdated, dataSetsConfig }) => {
     const { compositionRoot, config } = useAppContext();
     const { currentUser } = config;
     const loading = useLoading();
@@ -94,6 +96,7 @@ export const DataDifferencesList: React.FC<DataDifferencesListProps> = ({ select
             if (items.length === 0) return emptyPage;
 
             const { pager, objects } = await compositionRoot.malDataApproval.getDiff({
+                dataSetsConfig,
                 config,
                 paging: { page: paging.page, pageSize: paging.pageSize },
                 sorting: getSortingFromTableSorting(sorting),
@@ -109,7 +112,7 @@ export const DataDifferencesList: React.FC<DataDifferencesListProps> = ({ select
 
             return { pager: pager, objects: getDataDiffViews(objects) };
         },
-        [compositionRoot.malDataApproval, config, selectedIds, snackbar]
+        [compositionRoot.malDataApproval, config, selectedIds, snackbar, dataSetsConfig]
     );
 
     const tableProps = useObjectsTable(baseConfig, getRows);

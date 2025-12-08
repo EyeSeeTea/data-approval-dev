@@ -5,6 +5,7 @@ import { MalDataApprovalItem, MalDataApprovalItemIdentifier } from "../entities/
 import { DataDiffItemIdentifier } from "../entities/DataDiffItem";
 import { DataValueStats } from "../../../common/entities/DataValueStats";
 import { Log } from "../usecases/UpdateMalApprovalStatusUseCase";
+import { DataSetWithConfigPermissions } from "../../../usecases/GetApprovalConfigurationsUseCase";
 
 export interface MalDataApprovalRepository {
     get(options: MalDataApprovalOptions): Promise<PaginatedObjects<MalDataApprovalItem>>;
@@ -38,4 +39,5 @@ export interface MalDataApprovalOptions {
     completionStatus?: boolean;
     isApproved?: boolean;
     modificationCount?: string | undefined;
+    dataSetsConfig: DataSetWithConfigPermissions[];
 }

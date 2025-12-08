@@ -153,6 +153,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
             sorting,
             useOldPeriods,
             modificationCount,
+            dataSetsConfig,
         } = options;
         if (!dataSetId) return emptyPage;
         const dataSetResponse = await this.api.models.dataSets
@@ -164,7 +165,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
 
         const sqlViews = new Dhis2SqlViews(this.api);
         const pagingToDownload = { page: 1, pageSize: 10000 };
-        const dataSetSettings = config.appSettings.dataSets[dataSet.code];
+        const dataSetSettings = dataSetsConfig.find(ds => ds.configuration.dataSetOriginalCode === dataSet.code);
         if (!dataSetSettings) throw new Error(`Data set settings not found for ID: ${dataSetId}`);
 
         const sqlVariables = {
@@ -181,7 +182,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         const headerRows = await this.getSqlViewHeaders<SqlFieldHeaders>(sqlViews, options, pagingToDownload);
         const rows = await this.getSqlViewRows<Variables, SqlField>(
             sqlViews,
-            useOldPeriods ? dataSetSettings.oldDataSourceId : dataSetSettings.dataSourceId,
+            useOldPeriods ? dataSetSettings.configuration.dataSourceId : dataSetSettings.configuration.dataSourceId,
             sqlVariables,
             pagingToDownload
         );

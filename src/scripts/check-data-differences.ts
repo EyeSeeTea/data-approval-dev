@@ -11,6 +11,12 @@ import _ from "lodash";
 import { promiseMap } from "../utils/promises";
 import { dataSetApprovalName, WmrDiffReport } from "../domain/reports/WmrDiffReport";
 import { AppSettingsD2Repository } from "../data/AppSettingsD2Repository";
+import { UserD2Repository } from "../data/UserD2Repository";
+import { DataSetConfigurationD2Repository } from "../data/DataSetConfigurationD2Repository";
+import {
+    DataSetWithConfigPermissions,
+    GetApprovalConfigurationsUseCase,
+} from "../domain/usecases/GetApprovalConfigurationsUseCase";
 
 const GLOBAL_OU = "WHO-HQ";
 const DEFAULT_START_YEAR = 2005;
@@ -38,12 +44,24 @@ export async function checkMalDataValuesDiff(options: DataDifferencesOptions): P
     const dataValueRepository = new DataValuesD2Repository(api);
     const dataSetRepository = new DataSetD2Repository(api);
 
+    const userRepository = new UserD2Repository(api);
+    const dataSetConfigurationRepository = new DataSetConfigurationD2Repository(api);
+
+    const getConfigUseCase = new GetApprovalConfigurationsUseCase({
+        dataSetRepository,
+        dataSetConfigurationRepository,
+        userRepository,
+    });
+
+    const dataSetConfigs = await getConfigUseCase.execute().toPromise();
+
     const { dataSet, orgUnit } = await getMalWMRMetadata(api, ouOption);
     const dataElementsWithValues = await buildDataDifferenceItems({
         dataValueRepository: dataValueRepository,
         dataSetRepository: dataSetRepository,
         dataSetId: dataSet.id,
         orgUnitId: orgUnit.id,
+        dataSetConfigs,
         yearOption: yearOption,
     });
 
@@ -56,11 +74,11 @@ async function buildDataDifferenceItems(options: {
     dataSetRepository: DataSetD2Repository;
     dataSetId: Id;
     orgUnitId: Id;
+    dataSetConfigs: DataSetWithConfigPermissions[];
     yearOption?: string;
 }): Promise<DataDiffItem[]> {
-    const { dataValueRepository, dataSetRepository, dataSetId, orgUnitId, yearOption } = options;
+    const { dataValueRepository, dataSetRepository, dataSetId, orgUnitId, yearOption, dataSetConfigs } = options;
     const dataSetAPVD = await dataSetRepository.getByNameOrCode(dataSetApprovalName);
-    const appSettings = await new AppSettingsD2Repository().get();
 
     // If not OU is provided, use the org. units assigned to the APVD data set
     const assignedOrgUnitIds = dataSetAPVD.organisationUnits.map(ou => ou.id);
@@ -73,7 +91,7 @@ async function buildDataDifferenceItems(options: {
         const dataElementsWithValues = await new WmrDiffReport(
             dataValueRepository,
             dataSetRepository,
-            appSettings
+            dataSetConfigs
         ).getDiff(
             dataSetId,
             orgUnitId,

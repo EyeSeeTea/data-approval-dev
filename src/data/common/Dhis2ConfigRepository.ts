@@ -272,7 +272,7 @@ export class Dhis2ConfigRepository implements ConfigRepository {
                         username: true,
                         userRoles: { id: true, name: true, authorities: true },
                     },
-                    userGroups: { id: true, name: true },
+                    userGroups: { id: true, name: true, code: true },
                 },
             })
             .getData();

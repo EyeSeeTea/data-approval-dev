@@ -123,6 +123,7 @@ import { GetDataSetConfigurationByCodeUseCase } from "./domain/usecases/GetDataS
 import { MetadataEntityD2Repository } from "./data/MetadataEntityD2Repository";
 import { GetMetadataEntitiesUseCase } from "./domain/usecases/GetMetadataEntitiesUseCase";
 import { SaveDataSetConfigurationUseCase } from "./domain/usecases/SaveDataSetConfigurationUseCase";
+import { GetApprovalConfigurationsUseCase } from "./domain/usecases/GetApprovalConfigurationsUseCase";
 
 export function getCompositionRoot(api: D2Api) {
     const configRepository = new Dhis2ConfigRepository(api, getReportType());
@@ -174,6 +175,11 @@ export function getCompositionRoot(api: D2Api) {
             getAll: new GetDataSetConfigurationsUseCase({ dataSetConfigurationRepository, userRepository }),
             getByCode: new GetDataSetConfigurationByCodeUseCase({ dataSetConfigurationRepository, userRepository }),
             save: new SaveDataSetConfigurationUseCase({ dataSetConfigurationRepository, userRepository }),
+            getDataSets: new GetApprovalConfigurationsUseCase({
+                dataSetConfigurationRepository,
+                userRepository,
+                dataSetRepository,
+            }),
         },
         dataSetStatus: {
             get: new GetDataSetStatusUseCase(dataSetStatusRepository),
@@ -197,14 +203,8 @@ export function getCompositionRoot(api: D2Api) {
             updateStatus: new UpdateStatusUseCase(dataApprovalRepository),
         }),
         malDataApproval: getExecute({
-            get: new GetMalDataSetsUseCase(
-                dataDuplicationRepository,
-                dataValuesRepository,
-                dataSetRepository,
-                monitoringValueRepository,
-                appSettingsRepository
-            ),
-            getDiff: new GetMalDataDiffUseCase(dataValuesRepository, dataSetRepository, appSettingsRepository),
+            get: new GetMalDataSetsUseCase(dataDuplicationRepository, dataValuesRepository, dataSetRepository),
+            getDiff: new GetMalDataDiffUseCase(dataValuesRepository, dataSetRepository),
             save: new SaveMalDataSetsUseCase(dataDuplicationRepository),
             getColumns: new GetMalDataApprovalColumnsUseCase(dataDuplicationRepository),
             saveColumns: new SaveMalDataApprovalColumnsUseCase(dataDuplicationRepository),

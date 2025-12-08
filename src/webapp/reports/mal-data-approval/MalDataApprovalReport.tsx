@@ -4,10 +4,13 @@ import { useAppContext } from "../../contexts/app-context";
 import { DataApprovalList } from "./data-approval-list/DataApprovalList";
 import { IconButton } from "@material-ui/core";
 import SettingsIcon from "@material-ui/icons/Settings";
-import { useNavigate } from "react-router-dom";
+import { useLoaderData, useNavigate } from "react-router-dom";
+import { DataSetConfigLoader } from "../Reports";
 
 const MalDataApprovalStatusReport: React.FC = () => {
     const { config } = useAppContext();
+    // TODO: update to react-router v7 which has better types support
+    const loaderData = useLoaderData() as DataSetConfigLoader;
     const navigate = useNavigate();
     const classes = useStyles();
 
@@ -17,13 +20,13 @@ const MalDataApprovalStatusReport: React.FC = () => {
 
     return (
         <div className={classes.wrapper}>
-            <div style={{ display: "flex" }}>
+            <div className={classes.container}>
                 <Typography variant="h5" gutterBottom>
                     {i18n.t("Data Approval Report")}
                 </Typography>
 
                 {config.currentUser.isAdmin && (
-                    <div style={{ marginLeft: "auto" }}>
+                    <div className={classes.iconContainer}>
                         <IconButton onClick={goToSettings}>
                             <SettingsIcon />
                         </IconButton>
@@ -31,13 +34,15 @@ const MalDataApprovalStatusReport: React.FC = () => {
                 )}
             </div>
 
-            <DataApprovalList />
+            <DataApprovalList dataSetsConfig={loaderData.dataSetsConfig} />
         </div>
     );
 };
 
 const useStyles = makeStyles({
     wrapper: { padding: 20 },
+    container: { display: "flex" },
+    iconContainer: { marginLeft: "auto" },
 });
 
 export default MalDataApprovalStatusReport;

@@ -16,6 +16,13 @@ import { DataDiffItemIdentifier } from "../domain/reports/mal-data-approval/enti
 import { ApproveMalDataValuesUseCase } from "../domain/reports/mal-data-approval/usecases/ApproveMalDataValuesUseCase";
 import { writeFileSync } from "fs";
 import { AppSettingsD2Repository } from "../data/AppSettingsD2Repository";
+import { GetDataSetConfigurationByCodeUseCase } from "../domain/usecases/GetDataSetConfigurationByCodeUseCase";
+import {
+    DataSetWithConfigPermissions,
+    GetApprovalConfigurationsUseCase,
+} from "../domain/usecases/GetApprovalConfigurationsUseCase";
+import { DataSetConfigurationD2Repository } from "../data/DataSetConfigurationD2Repository";
+import { UserD2Repository } from "../data/UserD2Repository";
 
 const GLOBAL_OU = "WHO-HQ";
 const DEFAULT_START_YEAR = 2005;
@@ -37,6 +44,16 @@ export async function approveMalDataValues(options: ApprovalOptions): Promise<vo
     const approvalRepository = new MalDataApprovalDefaultRepository(api);
     const dataValueRepository = new DataValuesD2Repository(api);
     const dataSetRepository = new DataSetD2Repository(api);
+    const userRepository = new UserD2Repository(api);
+    const dataSetConfigurationRepository = new DataSetConfigurationD2Repository(api);
+
+    const getConfigUseCase = new GetApprovalConfigurationsUseCase({
+        dataSetRepository,
+        dataSetConfigurationRepository,
+        userRepository,
+    });
+
+    const dataSetConfigs = await getConfigUseCase.execute().toPromise();
 
     const { dataSet, orgUnit } = await getMalWMRMetadata(api, ouOption);
     const malDataApprovalItems = await buildMalApprovalItems(
@@ -44,6 +61,7 @@ export async function approveMalDataValues(options: ApprovalOptions): Promise<vo
         dataSetRepository,
         dataSet.id,
         orgUnit.id,
+        dataSetConfigs,
         yearOption
     );
 
@@ -87,9 +105,9 @@ async function buildMalApprovalItems(
     dataSetRepository: DataSetD2Repository,
     dataSetId: Id,
     orgUnitId: Id,
+    dataSetConfigs: DataSetWithConfigPermissions[],
     yearOption?: string
 ): Promise<DataDiffItemIdentifier[]> {
-    const appSettings = await new AppSettingsD2Repository().get();
     const periods = yearOption
         ? [yearOption]
         : _.range(DEFAULT_START_YEAR, DEFAULT_END_YEAR + 1).map(year => year.toString());
@@ -98,7 +116,7 @@ async function buildMalApprovalItems(
         const dataElementsWithValues = await new WmrDiffReport(
             dataValueRepository,
             dataSetRepository,
-            appSettings
+            dataSetConfigs
         ).getDiff(
             dataSetId,
             orgUnitId,
