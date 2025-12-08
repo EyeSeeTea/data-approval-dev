@@ -1,4 +1,4 @@
-import { Button, createStyles, Grid, makeStyles, Paper, Theme } from "@material-ui/core";
+import { Button, Checkbox, createStyles, Grid, makeStyles, Paper, Theme } from "@material-ui/core";
 import React from "react";
 import {
     DataSetConfiguration,
@@ -105,13 +105,31 @@ export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
                             onlyWithCode
                         />
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid item xs={12}>
                         <EntitySelector
                             type="sqlViews"
                             label={i18n.t("Data Source")}
                             value={configuration.dataSourceId}
                             onChange={updateDataSource}
                         />
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Checkbox
+                            checked={configuration.submitAndComplete}
+                            onChange={e => {
+                                onChange(configuration.updateSubmitAndComplete(e.target.checked));
+                            }}
+                        />
+                        {i18n.t("Submit also approves the dataSet")}
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Checkbox
+                            checked={configuration.revokeAndIncomplete}
+                            onChange={e => {
+                                onChange(configuration.updateRevokeAndIncomplete(e.target.checked));
+                            }}
+                        />
+                        {i18n.t("Revoke also marks dataSet as incomplete")}
                     </Grid>
                     <div className={classes.permissionContainer}>
                         {dataSetConfigurationActions.map(action => {

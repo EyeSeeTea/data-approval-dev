@@ -9,17 +9,4 @@ export interface User {
     userRoles: NamedRef[];
     userGroups: Array<NamedRef & { code: string }>;
     isAdmin: boolean;
-    dataSets?: Record<Id, UserDataSetAction>;
 }
-
-export type UserDataSetAccess = Record<string, UserDataSetAction>;
-
-export type UserDataSetAction = {
-    complete: boolean;
-    incomplete: boolean;
-    monitoring: boolean;
-    read: boolean;
-    revoke: boolean;
-    submit: boolean;
-    approve: boolean;
-};

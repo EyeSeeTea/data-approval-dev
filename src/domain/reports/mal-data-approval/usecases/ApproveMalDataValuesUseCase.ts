@@ -2,6 +2,7 @@ import _ from "lodash";
 import { UseCase } from "../../../../compositionRoot";
 import { DataValueStats } from "../../../common/entities/DataValueStats";
 import { DataSetRepository } from "../../../common/repositories/DataSetRepository";
+import { DataSetWithConfigPermissions } from "../../../usecases/GetApprovalConfigurationsUseCase";
 import { dataSetApprovalName } from "../../WmrDiffReport";
 import { DataDiffItemIdentifier } from "../entities/DataDiffItem";
 import { MalDataApprovalRepository } from "../repositories/MalDataApprovalRepository";
@@ -9,7 +10,10 @@ import { MalDataApprovalRepository } from "../repositories/MalDataApprovalReposi
 export class ApproveMalDataValuesUseCase implements UseCase {
     constructor(private dataSetRepository: DataSetRepository, private approvalRepository: MalDataApprovalRepository) {}
 
-    async execute(items: DataDiffItemIdentifier[]): Promise<DataValueStats[]> {
+    async execute(
+        items: DataDiffItemIdentifier[],
+        dataSetConfig: DataSetWithConfigPermissions
+    ): Promise<DataValueStats[]> {
         const approvalDataSet = await this.dataSetRepository.getByNameOrCode(dataSetApprovalName);
         const assignedOrgUnitIds = approvalDataSet.organisationUnits.map(ou => ou.id);
         const dataValuesOrgUnitIds = _(items)
@@ -39,9 +43,10 @@ export class ApproveMalDataValuesUseCase implements UseCase {
                 ? items.filter(item => (nonAssignedOrgUnits.includes(item.orgUnit) ? false : true))
                 : items;
 
-        const stats = await this.approvalRepository.replicateDataValuesInApvdDataSet(
-            dataValuesWithoutNonAssignedOrgUnits
-        );
+        const stats = await this.approvalRepository.replicateDataValuesInApvdDataSet({
+            dataSetConfig: dataSetConfig,
+            originalDataValues: dataValuesWithoutNonAssignedOrgUnits,
+        });
 
         return stats.concat(notAssignedOrgUnitsStast);
     }

@@ -33,6 +33,7 @@ type DataApprovalFilterState = {
 
 export function useDataApprovalFilters(filterProps: DataApprovalFilterProps): DataApprovalFilterState {
     const { config, compositionRoot } = useAppContext();
+    const allDataSets = filterProps.dataSetsConfig.map(ds => ds.dataSet);
     const initialDataSetIds = filterProps.dataSetsConfig.map(ds => ds.dataSet.id);
     const { values: filter, onChange } = filterProps;
     const { orgUnitPaths } = filter;
@@ -44,7 +45,10 @@ export function useDataApprovalFilters(filterProps: DataApprovalFilterProps): Da
         compositionRoot.malDataApproval.getOrgUnitsWithChildren().then(setOrgUnits);
     }, [compositionRoot.malDataApproval]);
 
-    const dataSetOrgUnits = getOrgUnitsFromId(config.orgUnits, orgUnits);
+    const dataSetOrgUnits = getOrgUnitsFromId(
+        allDataSets.flatMap(ds => ds.organisationUnits.map(ou => ou.id)),
+        orgUnits
+    );
     const selectableOUs = _.union(
         orgUnits.filter(org => org.level < countryLevel),
         dataSetOrgUnits

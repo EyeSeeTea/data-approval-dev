@@ -23,6 +23,8 @@ export type DataSetConfigurationAttrs = {
     approvalDateCode: string;
     permissions: Record<DataSetConfigurationAction, DataSetConfigurationPermissions>;
     dataSourceId: Id;
+    submitAndComplete: boolean;
+    revokeAndIncomplete: boolean;
 };
 
 export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
@@ -42,6 +44,8 @@ export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
             approvalDateCode: "",
             permissions: this.getEmptyPermissions(),
             dataSourceId: "",
+            submitAndComplete: false,
+            revokeAndIncomplete: false,
         });
     }
 
@@ -70,6 +74,14 @@ export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
 
     updateDataSourceId(id: Id): DataSetConfiguration {
         return this._update({ dataSourceId: id });
+    }
+
+    updateSubmitAndComplete(value: boolean): DataSetConfiguration {
+        return this._update({ submitAndComplete: value });
+    }
+
+    updateRevokeAndIncomplete(value: boolean): DataSetConfiguration {
+        return this._update({ revokeAndIncomplete: value });
     }
 
     hasPermission(action: DataSetConfigurationAction, username: string, userGroupCodes: Code[]): boolean {

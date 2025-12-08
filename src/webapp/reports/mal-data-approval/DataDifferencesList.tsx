@@ -20,6 +20,7 @@ import { ThumbUp } from "@material-ui/icons";
 import { parseDataDuplicationItemId } from "../../../domain/reports/mal-data-approval/entities/MalDataApprovalItem";
 import { emptyPage, Sorting } from "../../../domain/common/entities/PaginatedObjects";
 import { DataSetWithConfigPermissions } from "../../../domain/usecases/GetApprovalConfigurationsUseCase";
+import { getDataSetAccess } from "./data-approval-list/hooks/useActiveDataApprovalActions";
 
 interface DataDifferencesListProps {
     selectedIds: string[];
@@ -63,7 +64,7 @@ export const DataDifferencesList: React.FC<DataDifferencesListProps> = ({ select
                         if (items.length === 0) return;
 
                         try {
-                            const result = await compositionRoot.malDataApproval.duplicateValue(items);
+                            const result = await compositionRoot.malDataApproval.duplicateValue(items, dataSetsConfig);
                             loading.hide();
                             if (!result) snackbar.error(i18n.t("Error when trying to approve data values"));
                         } catch (error: any) {
@@ -73,8 +74,13 @@ export const DataDifferencesList: React.FC<DataDifferencesListProps> = ({ select
                         isUpdated();
                     },
                     isActive: items => {
-                        const access = currentUser.dataSets ? currentUser.dataSets[dataSetId] : undefined;
-                        return Boolean(access?.approve) && items.filter(item => item.value !== undefined).length > 0;
+                        const hasAccess = getDataSetAccess({
+                            action: "approve",
+                            dataSetId,
+                            user: currentUser,
+                            dataSetsConfig,
+                        });
+                        return hasAccess && items.filter(item => item.value !== undefined).length > 0;
                     },
                 },
             ],
@@ -87,7 +93,7 @@ export const DataDifferencesList: React.FC<DataDifferencesListProps> = ({ select
                 pageSizeInitialValue: 10,
             },
         }),
-        [compositionRoot.malDataApproval, isUpdated, currentUser, snackbar, loading, dataSetId]
+        [compositionRoot.malDataApproval, isUpdated, currentUser, snackbar, loading, dataSetId, dataSetsConfig]
     );
 
     const getRows = useMemo(

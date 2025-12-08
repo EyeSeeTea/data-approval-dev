@@ -17,7 +17,7 @@ type ActiveDataApprovalActionsState = {
     isSubmitActionVisible: (rows: DataApprovalViewModel[]) => boolean;
 };
 
-function getDataSetAccess(options: {
+export function getDataSetAccess(options: {
     action: DataSetConfigurationAction;
     user: Config["currentUser"];
     dataSetsConfig: DataSetWithConfigPermissions[];
@@ -31,7 +31,7 @@ function getDataSetAccess(options: {
         user.userGroups.map(ug => ug.code),
         user.isAdmin
     );
-    return hasAccess;
+    return hasAccess ?? false;
 }
 
 export function useActiveDataApprovalActions(props: {

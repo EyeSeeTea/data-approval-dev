@@ -13,7 +13,7 @@ export class UCDataSetConfiguration {
 
     getConfigurations(): FutureData<DataSetConfiguration[]> {
         return this.options.userRepository.getCurrent().flatMap(currentUser => {
-            const userGroupIds = currentUser.userGroups.map(group => group.code);
+            const userGroupCodes = currentUser.userGroups.map(group => group.code);
 
             return this.options.dataSetConfigurationRepository.getAll().map(dataSetConfigs => {
                 // If user is super admin, return all configurations
@@ -26,7 +26,7 @@ export class UCDataSetConfiguration {
                     return config.canUserPerformAction(
                         "read",
                         currentUser.username,
-                        userGroupIds,
+                        userGroupCodes,
                         currentUser.isSuperAdmin
                     );
                 });

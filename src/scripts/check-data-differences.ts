@@ -10,7 +10,6 @@ import { Id } from "../domain/common/entities/Base";
 import _ from "lodash";
 import { promiseMap } from "../utils/promises";
 import { dataSetApprovalName, WmrDiffReport } from "../domain/reports/WmrDiffReport";
-import { AppSettingsD2Repository } from "../data/AppSettingsD2Repository";
 import { UserD2Repository } from "../data/UserD2Repository";
 import { DataSetConfigurationD2Repository } from "../data/DataSetConfigurationD2Repository";
 import {

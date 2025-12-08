@@ -23,6 +23,7 @@ type EntitySelectorProps = {
 export const EntitySelector = (props: EntitySelectorProps) => {
     const { label, onChange, value, type, onlyWithCode } = props;
     const [showModal, setShowModal] = React.useState(false);
+    const [selectedEntity, setSelectedEntity] = React.useState<TableEntity>();
 
     const openTable = React.useCallback(() => {
         setShowModal(true);
@@ -32,6 +33,7 @@ export const EntitySelector = (props: EntitySelectorProps) => {
         (entity: TableEntity) => {
             onChange(entity);
             setShowModal(false);
+            setSelectedEntity(entity);
         },
         [onChange]
     );
@@ -42,7 +44,7 @@ export const EntitySelector = (props: EntitySelectorProps) => {
                 required
                 onClick={openTable}
                 label={label}
-                value={value}
+                value={selectedEntity ? selectedEntity.code ?? selectedEntity.name : value}
                 inputProps={{ readOnly: true }}
                 fullWidth
             />

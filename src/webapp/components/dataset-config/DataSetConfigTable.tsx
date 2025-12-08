@@ -1,4 +1,5 @@
 import { ObjectsTable, TableConfig } from "@eyeseetea/d2-ui-components";
+import EditIcon from "@material-ui/icons/EditOutlined";
 import { DataSetConfiguration } from "../../../domain/entities/DataSetConfiguration";
 import i18n from "../../../locales";
 
@@ -39,6 +40,7 @@ export const DataSetConfigTable: React.FC<DataSetConfigTableProps> = props => {
             {
                 name: "edit",
                 text: i18n.t("Edit"),
+                icon: <EditIcon />,
                 isActive: () => isSuperAdmin,
                 onClick: item => {
                     const action = getItemByAction({ data, action: "edit", item });

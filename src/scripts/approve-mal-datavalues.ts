@@ -15,8 +15,6 @@ import { promiseMap } from "../utils/promises";
 import { DataDiffItemIdentifier } from "../domain/reports/mal-data-approval/entities/DataDiffItem";
 import { ApproveMalDataValuesUseCase } from "../domain/reports/mal-data-approval/usecases/ApproveMalDataValuesUseCase";
 import { writeFileSync } from "fs";
-import { AppSettingsD2Repository } from "../data/AppSettingsD2Repository";
-import { GetDataSetConfigurationByCodeUseCase } from "../domain/usecases/GetDataSetConfigurationByCodeUseCase";
 import {
     DataSetWithConfigPermissions,
     GetApprovalConfigurationsUseCase,
@@ -65,6 +63,12 @@ export async function approveMalDataValues(options: ApprovalOptions): Promise<vo
         yearOption
     );
 
+    const config = dataSetConfigs.find(config => config.dataSet.id === dataSet.id);
+    if (!config) {
+        console.error(`Approval configuration not found for dataSet ${dataSet.name} (${dataSet.id})`);
+        return;
+    }
+
     if (malDataApprovalItems.length === 0) {
         console.debug(`No data values to approve in ${dataSet.name} dataset.`);
         return;
@@ -72,7 +76,7 @@ export async function approveMalDataValues(options: ApprovalOptions): Promise<vo
 
     const approveDataValuesUseCase = new ApproveMalDataValuesUseCase(dataSetRepository, approvalRepository);
     await approveDataValuesUseCase
-        .execute(malDataApprovalItems)
+        .execute(malDataApprovalItems, config)
         .catch(err => {
             console.error("Error approving data values:", err);
         })

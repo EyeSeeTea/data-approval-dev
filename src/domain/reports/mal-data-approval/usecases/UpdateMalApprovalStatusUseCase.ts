@@ -6,15 +6,13 @@ import { WmrDiffReport } from "../../WmrDiffReport";
 import { MalDataApprovalItemIdentifier } from "../entities/MalDataApprovalItem";
 import { MalDataApprovalRepository } from "../repositories/MalDataApprovalRepository";
 import { DataDiffItemIdentifier } from "../entities/DataDiffItem";
-import { AppSettingsRepository } from "../../../common/repositories/AppSettingsRepository";
 import { DataSetWithConfigPermissions } from "../../../usecases/GetApprovalConfigurationsUseCase";
 
 export class UpdateMalApprovalStatusUseCase {
     constructor(
         private approvalRepository: MalDataApprovalRepository,
         private dataValueRepository: DataValuesRepository,
-        private dataSetRepository: DataSetRepository,
-        private appSettingsRepository: AppSettingsRepository
+        private dataSetRepository: DataSetRepository
     ) {}
 
     async execute(options: {
@@ -35,26 +33,31 @@ export class UpdateMalApprovalStatusUseCase {
 
         const result = await promiseMap(dataSetIds, async dataSetId => {
             const itemsToUpdate = itemsByDataSet[dataSetId];
-            if (!itemsToUpdate) return true;
+            const config = dataSetsConfig.find(config => config.dataSet.id === dataSetId);
+            if (!itemsToUpdate || !config) return true;
 
             switch (action) {
                 case "complete":
                     return this.approvalRepository.complete(itemsToUpdate);
                 case "approve":
                     // "Submit" in UI
-                    return this.approvalRepository.approve(itemsToUpdate, log);
+                    return this.approvalRepository.approve({ dataSets: itemsToUpdate, log, dataSetConfig: config });
                 case "duplicate": {
                     // "Approve" in UI
                     const dataElementsWithValues = await this.getDataElementsToDuplicate(itemsToUpdate, dataSetsConfig);
-                    const stats = await this.approvalRepository.replicateDataValuesInApvdDataSet(
-                        dataElementsWithValues
-                    );
+                    const stats = await this.approvalRepository.replicateDataValuesInApvdDataSet({
+                        originalDataValues: dataElementsWithValues,
+                        dataSetConfig: config,
+                    });
                     return stats.filter(stats => stats.errorMessages.length > 0).length === 0;
                 }
                 case "revoke": {
                     const revokeResult = await this.approvalRepository.unapprove(itemsToUpdate);
-                    const incompleteResult = await this.approvalRepository.incomplete(itemsToUpdate);
-                    return revokeResult && incompleteResult;
+                    if (config.configuration.revokeAndIncomplete) {
+                        const incompleteResult = await this.approvalRepository.incomplete(itemsToUpdate);
+                        return revokeResult && incompleteResult;
+                    }
+                    return revokeResult;
                 }
                 case "incomplete":
                     return this.approvalRepository.incomplete(itemsToUpdate);
