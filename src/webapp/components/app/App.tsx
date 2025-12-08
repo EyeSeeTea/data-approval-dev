@@ -57,7 +57,7 @@ const App = ({ api, d2 }: { api: D2Api; d2: D2 }) => {
 
                         <div id="app" className="content">
                             <AppContext.Provider value={appContext}>
-                                <Report />
+                                {appContext && <Report config={appContext.config} />}
                             </AppContext.Provider>
                         </div>
 

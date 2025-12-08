@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: i18next-conv\n"
-"POT-Creation-Date: 2025-10-10T16:43:16.465Z\n"
+"POT-Creation-Date: 2025-12-08T04:43:28.003Z\n"
 "PO-Revision-Date: 2018-10-25T09:02:35.143Z\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -17,13 +17,64 @@ msgstr ""
 msgid "Submitting dataset..."
 msgstr ""
 
+msgid "Cannot be blank: {{fieldName}}"
+msgstr ""
+
+msgid "The same value is not allowed for: {{fieldName}}"
+msgstr ""
+
+msgid "Please complete all required fields."
+msgstr ""
+
+msgid "DataSet"
+msgstr ""
+
+msgid "DataSet Approval"
+msgstr ""
+
+msgid "Submit Date DataElement"
+msgstr ""
+
+msgid "Approval Date DataElement"
+msgstr ""
+
+msgid "Data Source"
+msgstr ""
+
+msgid "Edit \"{{action}}\" Permissions"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "DataSet Code"
+msgstr ""
+
+msgid "DataSet Approval Code"
+msgstr ""
+
+msgid "DataElement Submission Date"
+msgstr ""
+
+msgid "DataElement Approval Date"
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
 msgid "<No value>"
 msgstr ""
 
-msgid "LOG OUT"
+msgid "Close"
 msgstr ""
 
-msgid "Close"
+msgid "Click on the ID to select the row"
+msgstr ""
+
+msgid "LOG OUT"
 msgstr ""
 
 msgid "Loading..."
@@ -50,9 +101,6 @@ msgstr ""
 msgid "Confirm"
 msgstr ""
 
-msgid "Cancel"
-msgstr ""
-
 msgid ""
 "This action will delete the stored data and process all the Indicators and "
 "Program Indicators from this DHIS2 instance."
@@ -62,6 +110,15 @@ msgid "This will take a long time."
 msgstr ""
 
 msgid "Are you sure?"
+msgstr ""
+
+msgid "Edit Configuration"
+msgstr ""
+
+msgid "Add Configuration"
+msgstr ""
+
+msgid "DataSet Configurations"
 msgstr ""
 
 msgid "Metadata Admin Report"

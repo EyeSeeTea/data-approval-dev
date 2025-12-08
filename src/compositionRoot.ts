@@ -112,6 +112,17 @@ import { AppSettingsD2Repository } from "./data/AppSettingsD2Repository";
 import { GetAppSettingsUseCase } from "./domain/usecases/GetAppSettingsUseCase";
 import { DataSetStatusD2Repository } from "./data/DataSetStatusD2Repository";
 import { GetDataSetStatusUseCase } from "./domain/usecases/GetDataSetStatusUseCase";
+import { GetDataSetConfigurationsUseCase } from "./domain/usecases/GetDataSetConfigurationsUseCase";
+import { UserD2Repository } from "./data/UserD2Repository";
+import { DataSetConfigurationD2Repository } from "./data/DataSetConfigurationD2Repository";
+import { GetUsersByUsernameUseCase } from "./domain/usecases/GetUsersByUsernameUseCase";
+import { GetUserGroupsByCodeUseCase } from "./domain/usecases/GetUserGroupsByCodeUseCase";
+import { SearchUsersAndUserGroupsUseCase } from "./domain/usecases/SearchUsersAndUserGroupsUseCase";
+import { UserSharingD2Repository } from "./data/UserSharingD2Repository";
+import { GetDataSetConfigurationByCodeUseCase } from "./domain/usecases/GetDataSetConfigurationByCodeUseCase";
+import { MetadataEntityD2Repository } from "./data/MetadataEntityD2Repository";
+import { GetMetadataEntitiesUseCase } from "./domain/usecases/GetMetadataEntitiesUseCase";
+import { SaveDataSetConfigurationUseCase } from "./domain/usecases/SaveDataSetConfigurationUseCase";
 
 export function getCompositionRoot(api: D2Api) {
     const configRepository = new Dhis2ConfigRepository(api, getReportType());
@@ -141,8 +152,29 @@ export function getCompositionRoot(api: D2Api) {
     const monitoringValueRepository = new MonitoringValueDataStoreRepository(api);
     const appSettingsRepository = new AppSettingsD2Repository();
     const dataSetStatusRepository = new DataSetStatusD2Repository(api);
+    const userRepository = new UserD2Repository(api);
+    const dataSetConfigurationRepository = new DataSetConfigurationD2Repository(api);
+    const userSharingRepository = new UserSharingD2Repository(api);
+    const metadataEntityRepository = new MetadataEntityD2Repository(api);
 
     return {
+        metadata: {
+            getBy: new GetMetadataEntitiesUseCase({ metadataEntityRepository }),
+        },
+        sharing: {
+            search: new SearchUsersAndUserGroupsUseCase({ userSharingRepository }),
+        },
+        userGroups: {
+            getByCodes: new GetUserGroupsByCodeUseCase({ userGroupRepository }),
+        },
+        users: {
+            getByUsernames: new GetUsersByUsernameUseCase({ userRepository }),
+        },
+        dataSetConfig: {
+            getAll: new GetDataSetConfigurationsUseCase({ dataSetConfigurationRepository, userRepository }),
+            getByCode: new GetDataSetConfigurationByCodeUseCase({ dataSetConfigurationRepository, userRepository }),
+            save: new SaveDataSetConfigurationUseCase({ dataSetConfigurationRepository, userRepository }),
+        },
         dataSetStatus: {
             get: new GetDataSetStatusUseCase(dataSetStatusRepository),
         },
