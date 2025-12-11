@@ -1,10 +1,7 @@
 import { D2Api, Id } from "../types/d2-api";
 import { ArgumentParser } from "argparse";
 import "dotenv-flow/config";
-import {
-    MAL_WMR_FORM_CODE,
-    MalDataApprovalDefaultRepository,
-} from "../data/reports/mal-data-approval/MalDataApprovalDefaultRepository";
+import { MalDataApprovalDefaultRepository } from "../data/reports/mal-data-approval/MalDataApprovalDefaultRepository";
 import { DataValuesD2Repository } from "../data/common/DataValuesD2Repository";
 import { DataSetD2Repository } from "../data/common/DataSetD2Repository";
 import { getMetadataByIdentifiableToken } from "../data/common/utils/getMetadataByIdentifiableToken";
@@ -18,18 +15,20 @@ import { writeFileSync } from "fs";
 import { AppSettingsD2Repository } from "../data/AppSettingsD2Repository";
 
 const GLOBAL_OU = "WHO-HQ";
-const DEFAULT_START_YEAR = 2005;
-const DEFAULT_END_YEAR = new Date().getFullYear() - 2;
+const DEFAULT_START_YEAR = 2001;
+const DEFAULT_END_YEAR = 2025;
 
 type ApprovalOptions = {
     baseUrl: string;
     authString: string;
     ouOption: string;
     yearOption: string;
+    dataSetCode: string;
+    dataSetApprovalName: string;
 };
 
 export async function approveMalDataValues(options: ApprovalOptions): Promise<void> {
-    const { baseUrl, authString, ouOption, yearOption } = options;
+    const { baseUrl, authString, ouOption, yearOption, dataSetCode } = options;
     const [username, password] = authString.split(":", 2);
     if (!username || !password) return;
 
@@ -38,7 +37,8 @@ export async function approveMalDataValues(options: ApprovalOptions): Promise<vo
     const dataValueRepository = new DataValuesD2Repository(api);
     const dataSetRepository = new DataSetD2Repository(api);
 
-    const { dataSet, orgUnit } = await getMalWMRMetadata(api, ouOption);
+    const { dataSet, orgUnit } = await getMalWMRMetadata(api, dataSetCode, ouOption);
+    console.log(`dataSet original: ${dataSet.name}`);
     const malDataApprovalItems = await buildMalApprovalItems(
         dataValueRepository,
         dataSetRepository,
@@ -54,23 +54,29 @@ export async function approveMalDataValues(options: ApprovalOptions): Promise<vo
 
     const approveDataValuesUseCase = new ApproveMalDataValuesUseCase(dataSetRepository, approvalRepository);
     await approveDataValuesUseCase
-        .execute(malDataApprovalItems)
+        .execute(malDataApprovalItems, options.dataSetApprovalName)
         .catch(err => {
             console.error("Error approving data values:", err);
         })
         .then(stats => {
-            const fileNameStats = "mal-data-approval-stats.json";
+            // add current date and time to the file name
+            const currentDateTime = new Date().toISOString().replace(/[:.]/g, "-");
+            const fileNameStats = `${dataSet.code}_${currentDateTime}-mal-data-approval-stats.json`;
             writeFileSync(fileNameStats, JSON.stringify(stats, null, 2));
             console.debug(`Finished. Stats saved to ${fileNameStats}`);
         });
 }
 
-async function getMalWMRMetadata(api: D2Api, ouOption: string): Promise<{ dataSet: CodedRef; orgUnit: CodedRef }> {
+async function getMalWMRMetadata(
+    api: D2Api,
+    dataSetCode: string,
+    ouOption: string
+): Promise<{ dataSet: CodedRef; orgUnit: CodedRef }> {
     const [dataSet, orgUnit] = await Promise.all([
         getMetadataByIdentifiableToken({
             api: api,
             metadataType: "dataSets",
-            token: MAL_WMR_FORM_CODE,
+            token: dataSetCode,
         }),
         getMetadataByIdentifiableToken({
             api: api,
@@ -151,6 +157,16 @@ async function main() {
         metavar: "YEAR",
     });
 
+    parser.add_argument("-ds", "--dataset", {
+        help: "DataSet code",
+        metavar: "dataset",
+    });
+
+    parser.add_argument("--dsa", "--dataset-approval", {
+        help: "DataSet approval name",
+        metavar: "dataSetApprovalName",
+    });
+
     try {
         const args = parser.parse_args();
         await approveMalDataValues({
@@ -158,6 +174,8 @@ async function main() {
             authString: args.user_auth,
             ouOption: args.org_unit,
             yearOption: args.year,
+            dataSetCode: args.dataset,
+            dataSetApprovalName: args.dsa,
         });
     } catch (err) {
         console.error(err);

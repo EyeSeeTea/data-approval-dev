@@ -34,7 +34,7 @@ export const approvalReportSettings: AppSettings = {
     dataSets: {
         "NHWA-M1-2023": {
             dataSourceId: "hvvqvHV6jIq",
-            oldDataSourceId: "hvvqvHV6jIq",
+            oldDataSourceId: "CadymAq0Vsi",
             approvalDataSetCode: "NHWA-M1-2023-APVD",
             dataElements: {
                 approvalDate: "NHWA_APPROVAL_DATE_MODULE1-APVD",
@@ -43,7 +43,7 @@ export const approvalReportSettings: AppSettings = {
         },
         "NHWA-M2-2023": {
             dataSourceId: "h8TOj5HtMM8",
-            oldDataSourceId: "h8TOj5HtMM8",
+            oldDataSourceId: "JzrrYb7fjMC",
             approvalDataSetCode: "NHWA-M2-2023-APVD",
             dataElements: {
                 approvalDate: "NHWA_APPROVAL_DATE_MODULE2-APVD",

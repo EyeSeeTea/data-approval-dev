@@ -1,7 +1,6 @@
 import { D2Api } from "../types/d2-api";
 import { ArgumentParser } from "argparse";
 import "dotenv-flow/config";
-import { MAL_WMR_FORM_CODE } from "../data/reports/mal-data-approval/MalDataApprovalDefaultRepository";
 import { DataValuesD2Repository } from "../data/common/DataValuesD2Repository";
 import { DataSetD2Repository } from "../data/common/DataSetD2Repository";
 import { getMetadataByIdentifiableToken } from "../data/common/utils/getMetadataByIdentifiableToken";
@@ -9,18 +8,21 @@ import { CodedRef } from "../domain/common/entities/Ref";
 import { Id } from "../domain/common/entities/Base";
 import _ from "lodash";
 import { promiseMap } from "../utils/promises";
-import { dataSetApprovalName, WmrDiffReport } from "../domain/reports/WmrDiffReport";
+import { WmrDiffReport } from "../domain/reports/WmrDiffReport";
 import { AppSettingsD2Repository } from "../data/AppSettingsD2Repository";
+import { writeFileSync } from "fs";
 
 const GLOBAL_OU = "WHO-HQ";
-const DEFAULT_START_YEAR = 2005;
-const DEFAULT_END_YEAR = new Date().getFullYear() - 2;
+const DEFAULT_START_YEAR = 2001;
+const DEFAULT_END_YEAR = 2025;
 
 type DataDifferencesOptions = {
     baseUrl: string;
     authString: string;
     orgUnit?: string;
     year?: string;
+    dataSetCode: string;
+    dataSetApprovalName: string;
 };
 
 type DataDiffItem = {
@@ -30,7 +32,10 @@ type DataDiffItem = {
 };
 
 export async function checkMalDataValuesDiff(options: DataDifferencesOptions): Promise<void> {
-    const { baseUrl, authString, orgUnit: ouOption, year: yearOption } = options;
+    const { baseUrl, authString, orgUnit: ouOption, year: yearOption, dataSetCode, dataSetApprovalName } = options;
+    if (!dataSetCode || !dataSetApprovalName) {
+        throw new Error("dataSetCode and dataSetApprovalName are required parameters");
+    }
     const [username, password] = authString.split(":", 2);
     if (!username || !password) return;
 
@@ -38,17 +43,27 @@ export async function checkMalDataValuesDiff(options: DataDifferencesOptions): P
     const dataValueRepository = new DataValuesD2Repository(api);
     const dataSetRepository = new DataSetD2Repository(api);
 
-    const { dataSet, orgUnit } = await getMalWMRMetadata(api, ouOption);
+    const { dataSet, orgUnit } = await getMalWMRMetadata(api, dataSetCode, ouOption);
+    console.debug(`dataSet original: ${dataSet.name} and orgUnit: ${orgUnit.name}`);
     const dataElementsWithValues = await buildDataDifferenceItems({
         dataValueRepository: dataValueRepository,
         dataSetRepository: dataSetRepository,
         dataSetId: dataSet.id,
         orgUnitId: orgUnit.id,
         yearOption: yearOption,
+        dataSetApprovalName: dataSetApprovalName,
     });
 
     if (dataElementsWithValues.length === 0) console.debug("No differences found");
-    else console.debug(formatDataDiffLog(dataElementsWithValues, dataSet.name, orgUnit.name, yearOption));
+    else {
+        const formattedLog = formatDataDiffLog(dataElementsWithValues, dataSet.name, orgUnit.name, yearOption);
+        console.debug(formattedLog);
+        // save to disk including current_date at the beginning of the file name date and time
+        const currentDateTime = new Date().toISOString().replace(/[:.]/g, "-");
+        const fileName = `${dataSet.code}-${currentDateTime}-data-differences-${orgUnit.code}.log`;
+        writeFileSync(fileName, formattedLog);
+        console.debug(`Differences log saved to ${fileName}`);
+    }
 }
 
 async function buildDataDifferenceItems(options: {
@@ -56,10 +71,12 @@ async function buildDataDifferenceItems(options: {
     dataSetRepository: DataSetD2Repository;
     dataSetId: Id;
     orgUnitId: Id;
+    dataSetApprovalName: string;
     yearOption?: string;
 }): Promise<DataDiffItem[]> {
-    const { dataValueRepository, dataSetRepository, dataSetId, orgUnitId, yearOption } = options;
+    const { dataValueRepository, dataSetRepository, dataSetId, orgUnitId, yearOption, dataSetApprovalName } = options;
     const dataSetAPVD = await dataSetRepository.getByNameOrCode(dataSetApprovalName);
+    console.log(`dataSet approval: ${dataSetAPVD.name}`);
     const appSettings = await new AppSettingsD2Repository().get();
 
     // If not OU is provided, use the org. units assigned to the APVD data set
@@ -70,6 +87,7 @@ async function buildDataDifferenceItems(options: {
         : _.range(DEFAULT_START_YEAR, DEFAULT_END_YEAR + 1).map(year => year.toString());
 
     const dataValuesToApprove = await promiseMap(periods, async period => {
+        console.debug(`Fetching dataValues for period ${period}...`);
         const dataElementsWithValues = await new WmrDiffReport(
             dataValueRepository,
             dataSetRepository,
@@ -93,12 +111,16 @@ async function buildDataDifferenceItems(options: {
     return _(dataValuesToApprove).flatten().value();
 }
 
-async function getMalWMRMetadata(api: D2Api, ouOption?: string): Promise<{ dataSet: CodedRef; orgUnit: CodedRef }> {
+async function getMalWMRMetadata(
+    api: D2Api,
+    dataSetCode: string,
+    ouOption?: string
+): Promise<{ dataSet: CodedRef; orgUnit: CodedRef }> {
     const [dataSet, orgUnit] = await Promise.all([
         getMetadataByIdentifiableToken({
             api: api,
             metadataType: "dataSets",
-            token: MAL_WMR_FORM_CODE,
+            token: dataSetCode,
         }),
         getMetadataByIdentifiableToken({
             api: api,
@@ -138,6 +160,16 @@ async function main() {
         metavar: "YEAR",
     });
 
+    parser.add_argument("-ds", "--dataset", {
+        help: "DataSet code",
+        metavar: "dataset",
+    });
+
+    parser.add_argument("--dsa", "--dataset-approval", {
+        help: "DataSet approval name",
+        metavar: "dataSetApprovalName",
+    });
+
     try {
         const args = parser.parse_args();
         await checkMalDataValuesDiff({
@@ -145,6 +177,8 @@ async function main() {
             authString: args.user_auth,
             orgUnit: args.org_unit,
             year: args.year,
+            dataSetCode: args.dataset,
+            dataSetApprovalName: args.dsa,
         });
     } catch (err) {
         console.error(err);
