@@ -12,8 +12,12 @@ export function promiseMap<T, S>(inputValues: T[], mapper: (value: T) => Promise
     return inputValues.reduce(reducer, Promise.resolve([]));
 }
 
-export async function getInChunks<T, U>(ids: T[], getter: (idsGroup: T[]) => Promise<U[]>): Promise<U[]> {
-    const objsCollection = await promiseMap(_.chunk(ids, 500), idsGroup => getter(idsGroup));
+export async function getInChunks<T, U>(
+    ids: T[],
+    getter: (idsGroup: T[]) => Promise<U[]>,
+    chunkSize = 500
+): Promise<U[]> {
+    const objsCollection = await promiseMap(_.chunk(ids, chunkSize), idsGroup => getter(idsGroup));
     return _.flatten(objsCollection);
 }
 
