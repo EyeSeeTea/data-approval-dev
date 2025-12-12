@@ -22,31 +22,33 @@ export class DataValuesD2Repository implements DataValuesRepository {
 
         const res = await res$.getData();
 
-        const dataElementIds = res.dataValues.map(dataValue => dataValue.dataElement);
+        const dataElementIds = _(res.dataValues)
+            .map(dataValue => dataValue.dataElement)
+            .uniq()
+            .value();
 
-        const dataElements = await getInChunks(dataElementIds, async deIds => {
-            const responseDes = await this.api.models.dataElements
-                .get({
-                    fields: { id: true, name: true },
-                    filter: { id: { in: deIds } },
-                    pageSize: 500,
-                })
-                .getData();
+        const chunkSize = 100;
 
-            return _(responseDes.objects)
-                .map(d2DataElement => {
-                    return [d2DataElement.id, d2DataElement.name];
-                })
-                .value();
-        });
+        const dataElements = await getInChunks(
+            dataElementIds,
+            async deIds => {
+                const responseDes = await this.api.models.dataElements
+                    .get({ fields: { id: true, name: true }, filter: { id: { in: deIds } }, pageSize: chunkSize })
+                    .getData();
+
+                return _(responseDes.objects)
+                    .map(d2DataElement => {
+                        return [d2DataElement.id, d2DataElement.name];
+                    })
+                    .value();
+            },
+            chunkSize
+        );
 
         const dataElementsById = _(dataElements).fromPairs().value();
 
         return res.dataValues.map(dataValue => {
-            return {
-                ...dataValue,
-                dataElementName: dataElementsById[dataValue.dataElement] || "",
-            };
+            return { ...dataValue, dataElementName: dataElementsById[dataValue.dataElement] || "" };
         });
     }
 

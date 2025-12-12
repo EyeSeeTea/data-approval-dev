@@ -3,7 +3,6 @@ import { UseCase } from "../../../../compositionRoot";
 import { DataValueStats } from "../../../common/entities/DataValueStats";
 import { DataSetRepository } from "../../../common/repositories/DataSetRepository";
 import { DataSetWithConfigPermissions } from "../../../usecases/GetApprovalConfigurationsUseCase";
-import { dataSetApprovalName } from "../../WmrDiffReport";
 import { DataDiffItemIdentifier } from "../entities/DataDiffItem";
 import { MalDataApprovalRepository } from "../repositories/MalDataApprovalRepository";
 
@@ -12,9 +11,10 @@ export class ApproveMalDataValuesUseCase implements UseCase {
 
     async execute(
         items: DataDiffItemIdentifier[],
-        dataSetConfig: DataSetWithConfigPermissions
+        dataSetConfig: DataSetWithConfigPermissions,
+        approvalDataSetName: string
     ): Promise<DataValueStats[]> {
-        const approvalDataSet = await this.dataSetRepository.getByNameOrCode(dataSetApprovalName);
+        const approvalDataSet = await this.dataSetRepository.getByNameOrCode(approvalDataSetName);
         const assignedOrgUnitIds = approvalDataSet.organisationUnits.map(ou => ou.id);
         const dataValuesOrgUnitIds = _(items)
             .map(item => item.orgUnit)
