@@ -67,9 +67,9 @@ export const AddDataSetSettingsPage = () => {
                 configuration={configuration}
                 onSave={saveConfiguration}
                 onError={setErrorMessage}
-                disableSave={isLoading}
                 onCancel={goToList}
                 onChange={updateConfiguration}
+                isLoading={isLoading}
             />
         </div>
     );

@@ -23,6 +23,7 @@ export type DataSetConfigurationAttrs = {
     approvalDateCode: string;
     permissions: Record<DataSetConfigurationAction, DataSetConfigurationPermissions>;
     dataSourceId: Id;
+    oldDataSourceId: Id;
     submitAndComplete: boolean;
     revokeAndIncomplete: boolean;
 };
@@ -44,6 +45,7 @@ export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
             approvalDateCode: "",
             permissions: this.getEmptyPermissions(),
             dataSourceId: "",
+            oldDataSourceId: "",
             submitAndComplete: false,
             revokeAndIncomplete: false,
         });
@@ -74,6 +76,10 @@ export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
 
     updateDataSourceId(id: Id): DataSetConfiguration {
         return this._update({ dataSourceId: id });
+    }
+
+    updateOldDataSourceId(id: Id): DataSetConfiguration {
+        return this._update({ oldDataSourceId: id });
     }
 
     updateSubmitAndComplete(value: boolean): DataSetConfiguration {
@@ -112,6 +118,7 @@ export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
             this.validateRequired("submissionDateCode", data.submissionDateCode),
             this.validateRequired("approvalDateCode", data.approvalDateCode),
             this.validateRequired("dataSourceId", data.dataSourceId),
+            this.validateRequired("oldDataSourceId", data.oldDataSourceId),
         ])
             .compact()
             .value();

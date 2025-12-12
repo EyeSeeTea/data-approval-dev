@@ -1,3 +1,4 @@
+import { LinearProgress } from "@material-ui/core";
 import _ from "lodash";
 import { Navigate, RouterProvider } from "react-router";
 import { createHashRouter, RouteObject } from "react-router-dom";
@@ -41,14 +42,14 @@ function generateRoutes(options: { config: Config; compositionRoot: CompositionR
             loader: () => {
                 return getDataSetConfigurations(compositionRoot);
             },
-            errorElement: <div>Failed to load report</div>,
+            hydrateFallbackElement: <LinearProgress variant="indeterminate" />,
         },
         config.currentUser.isAdmin ? dataSetSettingsRoutes : undefined,
     ])
         .compact()
         .value();
 
-    return createHashRouter(routes);
+    return createHashRouter(routes, { future: { v7_partialHydration: true } });
 }
 
 function Reports(props: { config: Config; compositionRoot: CompositionRoot }) {

@@ -90,7 +90,6 @@ export const Filters: React.FC<DataSetsFiltersProps> = React.memo(props => {
                     setSelected={setFilterValues.orgUnitPaths}
                     selected={filterValues.orgUnitPaths}
                     selectableIds={selectableIds}
-                    selectableLevels={[1, 2, 3]}
                 />
 
                 <DropdownStyled

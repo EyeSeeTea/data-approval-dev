@@ -6,6 +6,7 @@ import { IconButton } from "@material-ui/core";
 import SettingsIcon from "@material-ui/icons/Settings";
 import { useLoaderData, useNavigate } from "react-router-dom";
 import { DataSetConfigLoader } from "../Reports";
+import { NavLink } from "react-router-dom";
 
 const MalDataApprovalStatusReport: React.FC = () => {
     const { config } = useAppContext();
@@ -18,6 +19,8 @@ const MalDataApprovalStatusReport: React.FC = () => {
         navigate("/datasets-settings/list");
     };
 
+    const isAdmin = config.currentUser.isAdmin;
+
     return (
         <div className={classes.wrapper}>
             <div className={classes.container}>
@@ -25,7 +28,7 @@ const MalDataApprovalStatusReport: React.FC = () => {
                     {i18n.t("Data Approval Report")}
                 </Typography>
 
-                {config.currentUser.isAdmin && (
+                {isAdmin && (
                     <div className={classes.iconContainer}>
                         <IconButton onClick={goToSettings}>
                             <SettingsIcon />
@@ -33,6 +36,19 @@ const MalDataApprovalStatusReport: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {loaderData.dataSetsConfig.length === 0 && (
+                <div>
+                    <Typography color="error" style={{ marginLeft: 20 }}>
+                        {i18n.t("No dataSets configuration found.")}
+                    </Typography>
+                    {isAdmin && (
+                        <NavLink to="/datasets-settings/list" style={{ marginLeft: 20 }}>
+                            {i18n.t("Please setup dataSet configurations here.")}
+                        </NavLink>
+                    )}
+                </div>
+            )}
 
             <DataApprovalList dataSetsConfig={loaderData.dataSetsConfig} />
         </div>

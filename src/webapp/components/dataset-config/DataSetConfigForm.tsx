@@ -1,4 +1,4 @@
-import { Button, Checkbox, createStyles, Grid, makeStyles, Paper, Theme } from "@material-ui/core";
+import { Button, Checkbox, createStyles, Grid, LinearProgress, makeStyles, Paper, Theme } from "@material-ui/core";
 import React from "react";
 import {
     DataSetConfiguration,
@@ -16,12 +16,12 @@ type DataSetConfigFormProps = {
     onChange: (configuration: DataSetConfiguration) => void;
     onSave: (configuration: DataSetConfiguration) => void;
     onError: (message: string) => void;
-    disableSave?: boolean;
     onCancel: () => void;
+    isLoading?: boolean;
 };
 
 export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
-    const { configuration, disableSave, onCancel, onChange, onSave, onError } = props;
+    const { configuration, isLoading, onCancel, onChange, onSave, onError } = props;
 
     const [selectedPermission, setSelectedPermission] = React.useState<DataSetConfigurationAction>();
 
@@ -52,6 +52,11 @@ export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
         onChange(newConfiguration);
     };
 
+    const updateOldDataSource = (entity: TableEntity) => {
+        const newConfiguration = configuration.updateOldDataSourceId(entity.id);
+        onChange(newConfiguration);
+    };
+
     const handleSubmit = React.useCallback(
         (e: React.FormEvent) => {
             e.preventDefault();
@@ -67,6 +72,7 @@ export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
 
     return (
         <Paper>
+            {isLoading && <LinearProgress variant="indeterminate" />}
             <form onSubmit={handleSubmit} className={classes.form}>
                 <Grid container className={classes.container} spacing={1}>
                     <Grid item xs={6}>
@@ -105,12 +111,20 @@ export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
                             onlyWithCode
                         />
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid item xs={6}>
                         <EntitySelector
                             type="sqlViews"
                             label={i18n.t("Data Source")}
                             value={configuration.dataSourceId}
                             onChange={updateDataSource}
+                        />
+                    </Grid>
+                    <Grid item xs={6}>
+                        <EntitySelector
+                            type="sqlViews"
+                            label={i18n.t("Old Periods Data Source")}
+                            value={configuration.oldDataSourceId}
+                            onChange={updateOldDataSource}
                         />
                     </Grid>
                     <Grid item xs={6}>
@@ -167,7 +181,7 @@ export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
                     </div>
 
                     <Grid className={classes.btnContainer} item xs={12}>
-                        <Button variant="contained" disabled={disableSave} color="primary" type="submit" size="large">
+                        <Button variant="contained" disabled={isLoading} color="primary" type="submit" size="large">
                             {i18n.t("Save")}
                         </Button>
                         <Button variant="contained" color="primary" type="button" onClick={onCancel} size="large">

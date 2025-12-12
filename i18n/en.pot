@@ -5,8 +5,8 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"POT-Creation-Date: 2025-12-08T20:58:01.749Z\n"
-"PO-Revision-Date: 2025-12-08T20:58:01.749Z\n"
+"POT-Creation-Date: 2025-12-12T00:57:58.842Z\n"
+"PO-Revision-Date: 2025-12-12T00:57:58.842Z\n"
 
 msgid "0"
 msgstr ""
@@ -39,6 +39,9 @@ msgid "Approval Date DataElement"
 msgstr ""
 
 msgid "Data Source"
+msgstr ""
+
+msgid "Old Periods Data Source"
 msgstr ""
 
 msgid "Submit also approves the dataSet"

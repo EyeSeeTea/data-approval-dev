@@ -182,7 +182,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         const headerRows = await this.getSqlViewHeaders<SqlFieldHeaders>(sqlViews, options, pagingToDownload);
         const rows = await this.getSqlViewRows<Variables, SqlField>(
             sqlViews,
-            useOldPeriods ? dataSetSettings.configuration.dataSourceId : dataSetSettings.configuration.dataSourceId,
+            useOldPeriods ? dataSetSettings.configuration.oldDataSourceId : dataSetSettings.configuration.dataSourceId,
             sqlVariables,
             pagingToDownload
         );
