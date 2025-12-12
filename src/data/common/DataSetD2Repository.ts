@@ -2,7 +2,9 @@ import { Id } from "../../domain/common/entities/Base";
 import { DataSet } from "../../domain/common/entities/DataSet";
 import { OrgUnit } from "../../domain/common/entities/OrgUnit";
 import { DataSetRepository } from "../../domain/common/repositories/DataSetRepository";
-import { D2Api } from "../../types/d2-api";
+import { FutureData } from "../../domain/generic/Future";
+import { D2Api, MetadataPick } from "../../types/d2-api";
+import { apiToFuture } from "../api-futures";
 
 export class DataSetD2Repository implements DataSetRepository {
     constructor(private api: D2Api) {}
@@ -10,10 +12,7 @@ export class DataSetD2Repository implements DataSetRepository {
     async getByNameOrCode(nameOrCode: string): Promise<DataSet> {
         return this.api.metadata
             .get({
-                dataSets: {
-                    fields: { id: true, code: true, name: true, organisationUnits: { id: true, name: true } },
-                    filter: { identifiable: { eq: nameOrCode } },
-                },
+                dataSets: { fields: dataSetListFields, filter: { identifiable: { eq: nameOrCode } } },
             })
             .getData()
             .then(response => {
@@ -75,6 +74,39 @@ export class DataSetD2Repository implements DataSetRepository {
                 });
             });
     }
+
+    getByCodes(codes: string[]): FutureData<DataSet[]> {
+        return apiToFuture(
+            this.api.metadata.get({
+                dataSets: {
+                    fields: dataSetListFields,
+                    filter: { code: { in: codes } },
+                },
+            })
+        ).map(response => {
+            return this.buildDataSet(response.dataSets);
+        });
+    }
+
+    private buildDataSet(d2DataSets: D2DataSetListField[]): DataSet[] {
+        return d2DataSets.map((dataSet): DataSet => {
+            return {
+                dataElements: [],
+                code: dataSet.code,
+                id: dataSet.id,
+                name: dataSet.name,
+                organisationUnits: dataSet.organisationUnits.map(
+                    (ou): OrgUnit => ({
+                        id: ou.id,
+                        name: ou.name,
+                        path: "",
+                        children: [],
+                        level: 0,
+                    })
+                ),
+            };
+        });
+    }
 }
 
 const dataSetFields = {
@@ -105,3 +137,9 @@ const dataSetFields = {
         level: true,
     },
 };
+
+const dataSetListFields = { id: true, code: true, name: true, organisationUnits: { id: true, name: true } } as const;
+
+type D2DataSetListField = MetadataPick<{
+    dataSets: { fields: typeof dataSetListFields };
+}>["dataSets"][number];

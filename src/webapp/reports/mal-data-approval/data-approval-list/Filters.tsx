@@ -8,12 +8,14 @@ import { useAppContext } from "../../../contexts/app-context";
 import { Button } from "@material-ui/core";
 import { useDataApprovalFilters } from "./hooks/useDataApprovalFilters";
 import { OrgUnitsFilterButton } from "../../../components/org-units-filter/OrgUnitsFilterButton";
+import { DataSetWithConfigPermissions } from "../../../../domain/usecases/GetApprovalConfigurationsUseCase";
 
 type DataSetsFiltersProps = {
     values: DataSetsFilter;
     options: FilterOptions;
     onChange: React.Dispatch<React.SetStateAction<DataSetsFilter>>;
     hideDataSets?: boolean;
+    dataSetsConfig: DataSetWithConfigPermissions[];
 };
 
 export interface DataSetsFilter {
@@ -88,7 +90,6 @@ export const Filters: React.FC<DataSetsFiltersProps> = React.memo(props => {
                     setSelected={setFilterValues.orgUnitPaths}
                     selected={filterValues.orgUnitPaths}
                     selectableIds={selectableIds}
-                    selectableLevels={[1, 2, 3]}
                 />
 
                 <DropdownStyled

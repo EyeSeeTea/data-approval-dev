@@ -108,10 +108,21 @@ import { OrgUnitWithChildrenD2Repository } from "./data/reports/mal-data-approva
 import { UpdateMonitoringUseCase } from "./domain/reports/mal-data-approval/usecases/UpdateMonitoringUseCase";
 import { UserGroupD2Repository } from "./data/reports/mal-data-approval/UserGroupD2Repository";
 import { MonitoringValueDataStoreRepository } from "./data/reports/mal-data-approval/MonitoringValueDataStoreRepository";
-import { AppSettingsD2Repository } from "./data/AppSettingsD2Repository";
-import { GetAppSettingsUseCase } from "./domain/usecases/GetAppSettingsUseCase";
 import { DataSetStatusD2Repository } from "./data/DataSetStatusD2Repository";
 import { GetDataSetStatusUseCase } from "./domain/usecases/GetDataSetStatusUseCase";
+import { GetDataSetConfigurationsUseCase } from "./domain/usecases/GetDataSetConfigurationsUseCase";
+import { UserD2Repository } from "./data/UserD2Repository";
+import { DataSetConfigurationD2Repository } from "./data/DataSetConfigurationD2Repository";
+import { GetUsersByUsernameUseCase } from "./domain/usecases/GetUsersByUsernameUseCase";
+import { GetUserGroupsByCodeUseCase } from "./domain/usecases/GetUserGroupsByCodeUseCase";
+import { SearchUsersAndUserGroupsUseCase } from "./domain/usecases/SearchUsersAndUserGroupsUseCase";
+import { UserSharingD2Repository } from "./data/UserSharingD2Repository";
+import { GetDataSetConfigurationByCodeUseCase } from "./domain/usecases/GetDataSetConfigurationByCodeUseCase";
+import { MetadataEntityD2Repository } from "./data/MetadataEntityD2Repository";
+import { GetMetadataEntitiesUseCase } from "./domain/usecases/GetMetadataEntitiesUseCase";
+import { SaveDataSetConfigurationUseCase } from "./domain/usecases/SaveDataSetConfigurationUseCase";
+import { GetApprovalConfigurationsUseCase } from "./domain/usecases/GetApprovalConfigurationsUseCase";
+import { RemoveDataSetConfigurationUseCase } from "./domain/usecases/RemoveDataSetConfigurationUseCase";
 
 export function getCompositionRoot(api: D2Api) {
     const configRepository = new Dhis2ConfigRepository(api, getReportType());
@@ -139,15 +150,38 @@ export function getCompositionRoot(api: D2Api) {
     const orgUnitsWithChildrenRepository = new OrgUnitWithChildrenD2Repository(api);
     const userGroupRepository = new UserGroupD2Repository(api);
     const monitoringValueRepository = new MonitoringValueDataStoreRepository(api);
-    const appSettingsRepository = new AppSettingsD2Repository();
     const dataSetStatusRepository = new DataSetStatusD2Repository(api);
+    const userRepository = new UserD2Repository(api);
+    const dataSetConfigurationRepository = new DataSetConfigurationD2Repository(api);
+    const userSharingRepository = new UserSharingD2Repository(api);
+    const metadataEntityRepository = new MetadataEntityD2Repository(api);
 
     return {
+        metadata: {
+            getBy: new GetMetadataEntitiesUseCase({ metadataEntityRepository }),
+        },
+        sharing: {
+            search: new SearchUsersAndUserGroupsUseCase({ userSharingRepository }),
+        },
+        userGroups: {
+            getByCodes: new GetUserGroupsByCodeUseCase({ userGroupRepository }),
+        },
+        users: {
+            getByUsernames: new GetUsersByUsernameUseCase({ userRepository }),
+        },
+        dataSetConfig: {
+            getAll: new GetDataSetConfigurationsUseCase({ dataSetConfigurationRepository, userRepository }),
+            getByCode: new GetDataSetConfigurationByCodeUseCase({ dataSetConfigurationRepository, userRepository }),
+            save: new SaveDataSetConfigurationUseCase({ dataSetConfigurationRepository, userRepository }),
+            remove: new RemoveDataSetConfigurationUseCase({ dataSetConfigurationRepository, userRepository }),
+            getDataSets: new GetApprovalConfigurationsUseCase({
+                dataSetConfigurationRepository,
+                userRepository,
+                dataSetRepository,
+            }),
+        },
         dataSetStatus: {
             get: new GetDataSetStatusUseCase(dataSetStatusRepository),
-        },
-        appSettings: {
-            get: new GetAppSettingsUseCase(appSettingsRepository),
         },
         admin: getExecute({
             get: new GetWIDPAdminDefaultUseCase(widpAdminDefaultRepository),
@@ -165,14 +199,8 @@ export function getCompositionRoot(api: D2Api) {
             updateStatus: new UpdateStatusUseCase(dataApprovalRepository),
         }),
         malDataApproval: getExecute({
-            get: new GetMalDataSetsUseCase(
-                dataDuplicationRepository,
-                dataValuesRepository,
-                dataSetRepository,
-                monitoringValueRepository,
-                appSettingsRepository
-            ),
-            getDiff: new GetMalDataDiffUseCase(dataValuesRepository, dataSetRepository, appSettingsRepository),
+            get: new GetMalDataSetsUseCase(dataDuplicationRepository, dataValuesRepository, dataSetRepository),
+            getDiff: new GetMalDataDiffUseCase(dataValuesRepository, dataSetRepository),
             save: new SaveMalDataSetsUseCase(dataDuplicationRepository),
             getColumns: new GetMalDataApprovalColumnsUseCase(dataDuplicationRepository),
             saveColumns: new SaveMalDataApprovalColumnsUseCase(dataDuplicationRepository),
@@ -181,8 +209,7 @@ export function getCompositionRoot(api: D2Api) {
             updateStatus: new UpdateMalApprovalStatusUseCase(
                 dataDuplicationRepository,
                 dataValuesRepository,
-                dataSetRepository,
-                appSettingsRepository
+                dataSetRepository
             ),
             duplicateValue: new DuplicateDataValuesUseCase(dataDuplicationRepository, dataSetStatusRepository),
             getSortOrder: new GetSortOrderUseCase(dataDuplicationRepository),
