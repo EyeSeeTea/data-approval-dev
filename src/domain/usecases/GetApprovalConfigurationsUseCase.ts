@@ -20,6 +20,7 @@ export class GetApprovalConfigurationsUseCase {
         this.UCDataSetConfiguration = new UCDataSetConfiguration({
             dataSetConfigurationRepository: this.options.dataSetConfigurationRepository,
             userRepository: this.options.userRepository,
+            dataSetRepository: this.options.dataSetRepository,
         });
     }
 

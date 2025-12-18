@@ -60,9 +60,6 @@ function Reports(props: { config: Config; compositionRoot: CompositionRoot }) {
 export default Reports;
 
 export function getDataSetConfigurations(compositionRoot: CompositionRoot): Promise<DataSetConfigLoader> {
-    // get configs and build dataSets combo
-    // and available org units
-    //
     return compositionRoot.dataSetConfig.getDataSets
         .execute()
         .toPromise()

@@ -438,8 +438,6 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         dataSetConfig: DataSetWithConfigPermissions
     ): Promise<boolean> {
         try {
-            // const { approvalDataSetId } = await this.getApprovalDataSetId(dataValues);
-
             const approvalDataSet = await getMetadataByIdentifiableToken({
                 api: this.api,
                 metadataType: "dataSets",
@@ -679,16 +677,6 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         });
     }
 
-    private async getApprovalDataSetIdentifier(): Promise<Id> {
-        const { id } = await getMetadataByIdentifiableToken({
-            api: this.api,
-            metadataType: "dataSets",
-            token: MAL_WMR_FORM_APVD_NAME,
-        });
-
-        return process.env.REACT_APP_APPROVE_DATASET_ID ?? id;
-    }
-
     private async deleteEmptyDataValues(
         approvalDataSetId: string,
         approvedDataElements: DataElementsType[],
@@ -766,9 +754,6 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         dataValues: DataValueType[],
         approvalDateCode: string
     ) {
-        // const settings = await this.getSettingByDataSet([originalDataSetId]);
-        // const dataSetSettings = settings.find(setting => setting.dataSetId === originalDataSetId);
-        // if (!dataSetSettings) throw new Error(`Data set settings not found: ${originalDataSetId}`);
         const malApprovalDateDataElement = await getMetadataByIdentifiableToken({
             api: this.api,
             metadataType: "dataElements",
@@ -1030,7 +1015,7 @@ function mergeHeadersAndData(
     headers: SqlViewGetData<SqlFieldHeaders>["rows"],
     data: SqlViewGetData<SqlField>["rows"]
 ) {
-    const { sorting, paging, orgUnitIds, periods, approvalStatus, completionStatus } = options; // ?
+    const { sorting, paging, orgUnitIds, periods, approvalStatus, completionStatus } = options;
     const rows: Array<MalDataApprovalItem> = [];
 
     const mapping = _(data)

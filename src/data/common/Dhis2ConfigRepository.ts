@@ -1,11 +1,9 @@
 import _ from "lodash";
-import { keyById, NamedRef } from "../../domain/common/entities/Base";
 import { Config } from "../../domain/common/entities/Config";
 import { ReportType } from "../../domain/common/entities/ReportType";
 import { User } from "../../domain/common/entities/User";
 import { ConfigRepository } from "../../domain/common/repositories/ConfigRepository";
-import { D2Api, Id } from "../../types/d2-api";
-import { getReportType } from "../../webapp/utils/reportType";
+import { D2Api } from "../../types/d2-api";
 import { malDataSetCodes } from "../reports/mal-data-approval/constants/MalDataApprovalConstants";
 
 export const SQL_VIEW_DATA_COMMENTS_NAME = "NHWA Data Comments";
@@ -109,29 +107,29 @@ const base: Record<ReportType, BaseConfigType> = {
 };
 
 export class Dhis2ConfigRepository implements ConfigRepository {
-    constructor(private api: D2Api, private _type: ReportType) {}
+    constructor(private api: D2Api) {}
 
     async get(): Promise<Config> {
         const { serverTimeZoneId } = await this.api.system.info.getData();
-        const { dataSets, sqlViews: existedSqlViews, dataApprovalWorkflows } = await this.getMetadata();
+        const { sqlViews: existedSqlViews, dataApprovalWorkflows } = await this.getMetadata();
         const currentUser = await this.getCurrentUser();
 
-        const filteredDataSets = getFilteredDataSets(dataSets);
+        // const filteredDataSets = getFilteredDataSets([]);
 
         const sqlViews = existedSqlViews.reduce((acc, sqlView) => {
             return { ...acc, [sqlView.name]: sqlView };
         }, {});
 
-        const pairedDataElements = getPairedMapping(filteredDataSets);
-        const orgUnitList = getPairedOrgunitsMapping(filteredDataSets);
+        // const pairedDataElements = getPairedMapping(filteredDataSets);
+        // const orgUnitList = getPairedOrgunitsMapping(filteredDataSets);
         const currentYear = new Date().getFullYear();
         return {
             timeZoneId: serverTimeZoneId,
-            dataSets: keyById(dataSets),
+            dataSets: {},
             currentUser: currentUser,
             sqlViews,
-            pairedDataElementsByDataSet: pairedDataElements,
-            orgUnits: orgUnitList,
+            pairedDataElementsByDataSet: {},
+            orgUnits: [],
             sections: undefined,
             sectionsByDataSet: undefined,
             years: _.range(currentYear - 10, currentYear + 1).map(n => n.toString()),
@@ -143,18 +141,6 @@ export class Dhis2ConfigRepository implements ConfigRepository {
         const { constantCode, sqlViewNames, approvalWorkflows } = base.mal;
 
         const metadata$ = this.api.metadata.get({
-            dataSets: {
-                fields: {
-                    id: true,
-                    code: true,
-                    displayName: toName,
-                    dataSetElements: {
-                        dataElement: { id: true, name: true },
-                    },
-                    organisationUnits: { id: true },
-                },
-                filter: { code: { in: [] } },
-            },
             constants: {
                 fields: { description: true },
                 filter: { code: { eq: constantCode } },
@@ -207,77 +193,6 @@ export class Dhis2ConfigRepository implements ConfigRepository {
             isAdmin: d2User.userCredentials.userRoles.some(role => role.authorities.includes("ALL")),
         };
     }
-}
-
-interface DataSet {
-    id: Id;
-    dataSetElements: Array<{ dataElement: NamedRef }>;
-    organisationUnits: Array<{ id: Id }>;
-}
-
-function getNameOfDataElementWithValue(name: string): string {
-    const s = "NHWA_" + name.replace(/NHWA_Comment of /, "");
-    return s.replace(" - ", " for ");
-}
-
-function getCleanName(name: string): string {
-    return name
-        .replace(/[^\w]$/, "") // Remove trailing non-alphanumic characters
-        .replace(/\s+/g, " ") // Replace &nbps (x160) characters by normal spaces
-        .trim()
-        .toLowerCase();
-}
-
-function getPairedMapping(dataSets: DataSet[]): Config["pairedDataElementsByDataSet"] {
-    const dataElementsByName = _(dataSets)
-        .flatMap(dataSet => dataSet.dataSetElements)
-        .map(dse => dse.dataElement)
-        .keyBy(de => getCleanName(de.name))
-        .value();
-
-    return _(dataSets)
-        .map(dataSet => {
-            const mapping = getMappingForDataSet(dataSet, dataElementsByName);
-            return [dataSet.id, mapping] as [string, typeof mapping];
-        })
-        .fromPairs()
-        .value();
-}
-
-function getPairedOrgunitsMapping(dataSets: DataSet[]) {
-    const orgUnitList = _(dataSets)
-        .flatMap(dataSet => dataSet.organisationUnits)
-        .map(ou => ou.id)
-        .value();
-
-    return orgUnitList;
-}
-
-function getMappingForDataSet(dataSet: DataSet, dataElementsByName: Record<string, NamedRef>) {
-    return _(dataSet.dataSetElements)
-        .map(dse => dse.dataElement)
-        .filter(de => de.name.startsWith("NHWA_Comment of"))
-        .map(de => {
-            const name = getNameOfDataElementWithValue(de.name);
-            const cleanName = getCleanName(name);
-            const valueDataElement = dataElementsByName[cleanName];
-            if (!valueDataElement) {
-                console.error(`Value data element not found for comment:\n  ${name}`);
-                return null;
-            } else {
-                return { dataValueVal: valueDataElement.id, dataValueComment: de.id };
-            }
-        })
-        .compact()
-        .value();
-}
-
-function getFilteredDataSets<DataSet extends NamedRef>(dataSets: DataSet[]): DataSet[] {
-    const type = getReportType();
-    const { namePrefix, nameExcluded } = base[type].dataSets;
-
-    if (!namePrefix || !nameExcluded) return dataSets;
-    return dataSets.filter(({ name }) => name.startsWith(namePrefix) && !name.match(nameExcluded));
 }
 
 const toName = { $fn: { name: "rename", to: "name" } } as const;

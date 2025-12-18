@@ -5,8 +5,8 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"POT-Creation-Date: 2025-12-12T00:57:58.842Z\n"
-"PO-Revision-Date: 2025-12-12T00:57:58.842Z\n"
+"POT-Creation-Date: 2025-12-18T02:35:38.735Z\n"
+"PO-Revision-Date: 2025-12-18T02:35:38.735Z\n"
 
 msgid "0"
 msgstr ""
@@ -686,6 +686,12 @@ msgid "Error when trying to check difference in data values"
 msgstr ""
 
 msgid "Data Approval Report"
+msgstr ""
+
+msgid "No dataSets configuration found."
+msgstr ""
+
+msgid "Please setup dataSet configurations here."
 msgstr ""
 
 msgid "Complete"

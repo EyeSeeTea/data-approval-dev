@@ -20,7 +20,6 @@ import { SaveMalDataApprovalColumnsUseCase } from "./domain/reports/mal-data-app
 import { SaveMalDataSetsUseCase } from "./domain/reports/mal-data-approval/usecases/SaveMalDataSetsUseCase";
 import { D2Api } from "./types/d2-api";
 import { GetMalDataDiffUseCase } from "./domain/reports/mal-data-approval/usecases/GetMalDataDiffUseCase";
-import { getReportType } from "./webapp/utils/reportType";
 import { GetMalDataApprovalColumnsUseCase } from "./domain/reports/mal-data-approval/usecases/GetMalDataApprovalColumnsUseCase";
 import { MalDataApprovalDefaultRepository } from "./data/reports/mal-data-approval/MalDataApprovalDefaultRepository";
 import { MalDataSubscriptionDefaultRepository } from "./data/reports/mal-data-subscription/MalDataSubscriptionDefaultRepository";
@@ -125,7 +124,7 @@ import { GetApprovalConfigurationsUseCase } from "./domain/usecases/GetApprovalC
 import { RemoveDataSetConfigurationUseCase } from "./domain/usecases/RemoveDataSetConfigurationUseCase";
 
 export function getCompositionRoot(api: D2Api) {
-    const configRepository = new Dhis2ConfigRepository(api, getReportType());
+    const configRepository = new Dhis2ConfigRepository(api);
     const csyAuditEmergencyRepository = new CSYAuditEmergencyD2Repository(api);
     const csyAuditTraumaRepository = new CSYAuditTraumaD2Repository(api);
     const dataCommentsRepository = new NHWADataCommentsDefaultRepository(api);
@@ -170,7 +169,11 @@ export function getCompositionRoot(api: D2Api) {
             getByUsernames: new GetUsersByUsernameUseCase({ userRepository }),
         },
         dataSetConfig: {
-            getAll: new GetDataSetConfigurationsUseCase({ dataSetConfigurationRepository, userRepository }),
+            getAll: new GetDataSetConfigurationsUseCase({
+                dataSetConfigurationRepository,
+                userRepository,
+                dataSetRepository,
+            }),
             getByCode: new GetDataSetConfigurationByCodeUseCase({ dataSetConfigurationRepository, userRepository }),
             save: new SaveDataSetConfigurationUseCase({ dataSetConfigurationRepository, userRepository }),
             remove: new RemoveDataSetConfigurationUseCase({ dataSetConfigurationRepository, userRepository }),

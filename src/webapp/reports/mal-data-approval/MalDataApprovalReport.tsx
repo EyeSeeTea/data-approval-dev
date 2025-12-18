@@ -37,7 +37,7 @@ const MalDataApprovalStatusReport: React.FC = () => {
                 )}
             </div>
 
-            {loaderData.dataSetsConfig.length === 0 && (
+            {loaderData.dataSetsConfig.length === 0 ? (
                 <div>
                     <Typography color="error" style={{ marginLeft: 20 }}>
                         {i18n.t("No dataSets configuration found.")}
@@ -48,9 +48,9 @@ const MalDataApprovalStatusReport: React.FC = () => {
                         </NavLink>
                     )}
                 </div>
+            ) : (
+                <DataApprovalList dataSetsConfig={loaderData.dataSetsConfig} />
             )}
-
-            <DataApprovalList dataSetsConfig={loaderData.dataSetsConfig} />
         </div>
     );
 };

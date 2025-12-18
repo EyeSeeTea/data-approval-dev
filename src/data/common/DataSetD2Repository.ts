@@ -39,12 +39,7 @@ export class DataSetD2Repository implements DataSetRepository {
 
     async getById(id: Id): Promise<DataSet[]> {
         return this.api.metadata
-            .get({
-                dataSets: {
-                    fields: dataSetFields,
-                    filter: { id: { eq: id } },
-                },
-            })
+            .get({ dataSets: { fields: dataSetFields, filter: { id: { eq: id } } } })
             .getData()
             .then(response => {
                 return response.dataSets.map(d2DataSet => {
@@ -77,12 +72,7 @@ export class DataSetD2Repository implements DataSetRepository {
 
     getByCodes(codes: string[]): FutureData<DataSet[]> {
         return apiToFuture(
-            this.api.metadata.get({
-                dataSets: {
-                    fields: dataSetListFields,
-                    filter: { code: { in: codes } },
-                },
-            })
+            this.api.metadata.get({ dataSets: { fields: dataSetListFields, filter: { code: { in: codes } } } })
         ).map(response => {
             return this.buildDataSet(response.dataSets);
         });

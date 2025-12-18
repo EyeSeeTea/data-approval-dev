@@ -15,7 +15,11 @@ export class UserD2Repository implements UserRepository {
             .map(userIds => {
                 return apiToFuture(
                     this.api.models.users.get({
-                        fields: { id: true, displayName: true, userCredentials: { username: true } },
+                        fields: {
+                            id: true,
+                            displayName: true,
+                            userCredentials: { username: true, userRoles: { authorities: true } },
+                        },
                         filter: { username: { in: userIds } },
                         paging: false,
                     })
@@ -32,7 +36,7 @@ export class UserD2Repository implements UserRepository {
                         username: d2User.userCredentials.username,
                         userGroups: [],
                         userRoles: [],
-                        isSuperAdmin: false,
+                        isSuperAdmin: d2User.userCredentials.userRoles.some(role => role.authorities.includes("ALL")),
                     });
                 });
             });
@@ -52,7 +56,7 @@ export class UserD2Repository implements UserRepository {
             name: d2User.displayName,
             userGroups: d2User.userGroups,
             ...d2User.userCredentials,
-            isSuperAdmin: true,
+            isSuperAdmin: d2User.userCredentials.userRoles.some(role => role.authorities.includes("ALL")),
         });
     }
 }
