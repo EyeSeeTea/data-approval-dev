@@ -1,3 +1,4 @@
+import { Maybe } from "../../../types/utils";
 import { Code, Id } from "./Base";
 import { OrgUnit } from "./OrgUnit";
 
@@ -7,6 +8,7 @@ export type DataSet = {
     name: string;
     organisationUnits: OrgUnit[];
     dataElements: DataElement[];
+    periodType: Maybe<PeriodType>;
 };
 
 export type DataElement = {
@@ -28,4 +30,11 @@ export type CategoryOptionCombo = {
     id: Id;
     name: string;
     code: string;
+};
+
+const periodTypes = ["Monthly", "Yearly"] as const;
+export type PeriodType = typeof periodTypes[number];
+
+export const getAllowedPeriodType = (value: string): Maybe<PeriodType> => {
+    return periodTypes.find(pt => pt === value);
 };

@@ -12,7 +12,12 @@ import { promiseMap } from "../utils/promises";
 import { DataDiffItemIdentifier } from "../domain/reports/mal-data-approval/entities/DataDiffItem";
 import { ApproveMalDataValuesUseCase } from "../domain/reports/mal-data-approval/usecases/ApproveMalDataValuesUseCase";
 import { writeFileSync } from "fs";
-import { AppSettingsD2Repository } from "../data/AppSettingsD2Repository";
+import {
+    DataSetWithConfigPermissions,
+    GetApprovalConfigurationsUseCase,
+} from "../domain/usecases/GetApprovalConfigurationsUseCase";
+import { DataSetConfigurationD2Repository } from "../data/DataSetConfigurationD2Repository";
+import { UserD2Repository } from "../data/UserD2Repository";
 
 const GLOBAL_OU = "WHO-HQ";
 const DEFAULT_START_YEAR = 2001;
@@ -36,6 +41,16 @@ export async function approveMalDataValues(options: ApprovalOptions): Promise<vo
     const approvalRepository = new MalDataApprovalDefaultRepository(api);
     const dataValueRepository = new DataValuesD2Repository(api);
     const dataSetRepository = new DataSetD2Repository(api);
+    const userRepository = new UserD2Repository(api);
+    const dataSetConfigurationRepository = new DataSetConfigurationD2Repository(api);
+
+    const getConfigUseCase = new GetApprovalConfigurationsUseCase({
+        dataSetRepository,
+        dataSetConfigurationRepository,
+        userRepository,
+    });
+
+    const dataSetConfigs = await getConfigUseCase.execute().toPromise();
 
     const { dataSet, orgUnit } = await getMalWMRMetadata(api, dataSetCode, ouOption);
     console.log(`dataSet original: ${dataSet.name}`);
@@ -44,8 +59,15 @@ export async function approveMalDataValues(options: ApprovalOptions): Promise<vo
         dataSetRepository,
         dataSet.id,
         orgUnit.id,
+        dataSetConfigs,
         yearOption
     );
+
+    const config = dataSetConfigs.find(config => config.dataSet.id === dataSet.id);
+    if (!config) {
+        console.error(`Approval configuration not found for dataSet ${dataSet.name} (${dataSet.id})`);
+        return;
+    }
 
     if (malDataApprovalItems.length === 0) {
         console.debug(`No data values to approve in ${dataSet.name} dataset.`);
@@ -54,7 +76,7 @@ export async function approveMalDataValues(options: ApprovalOptions): Promise<vo
 
     const approveDataValuesUseCase = new ApproveMalDataValuesUseCase(dataSetRepository, approvalRepository);
     await approveDataValuesUseCase
-        .execute(malDataApprovalItems, options.dataSetApprovalName)
+        .execute(malDataApprovalItems, config, options.dataSetApprovalName)
         .catch(err => {
             console.error("Error approving data values:", err);
         })
@@ -93,9 +115,9 @@ async function buildMalApprovalItems(
     dataSetRepository: DataSetD2Repository,
     dataSetId: Id,
     orgUnitId: Id,
+    dataSetConfigs: DataSetWithConfigPermissions[],
     yearOption?: string
 ): Promise<DataDiffItemIdentifier[]> {
-    const appSettings = await new AppSettingsD2Repository().get();
     const periods = yearOption
         ? [yearOption]
         : _.range(DEFAULT_START_YEAR, DEFAULT_END_YEAR + 1).map(year => year.toString());
@@ -104,7 +126,7 @@ async function buildMalApprovalItems(
         const dataElementsWithValues = await new WmrDiffReport(
             dataValueRepository,
             dataSetRepository,
-            appSettings
+            dataSetConfigs
         ).getDiff(
             dataSetId,
             orgUnitId,

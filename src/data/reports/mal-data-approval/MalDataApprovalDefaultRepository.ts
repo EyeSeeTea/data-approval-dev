@@ -32,9 +32,9 @@ import { MalDataSet } from "./constants/MalDataApprovalConstants";
 import { getMetadataByIdentifiableToken } from "../../common/utils/getMetadataByIdentifiableToken";
 import { Maybe } from "../../../types/utils";
 import { DataValueStats } from "../../../domain/common/entities/DataValueStats";
-import { approvalReportSettings } from "../../ApprovalReportData";
 import { DATA_ELEMENT_SUFFIX } from "../../../domain/common/entities/AppSettings";
 import { Log } from "../../../domain/reports/mal-data-approval/usecases/UpdateMalApprovalStatusUseCase";
+import { DataSetWithConfigPermissions } from "../../../domain/usecases/GetApprovalConfigurationsUseCase";
 
 interface VariableHeaders {
     dataSets: string;
@@ -153,6 +153,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
             sorting,
             useOldPeriods,
             modificationCount,
+            dataSetsConfig,
         } = options;
         if (!dataSetId) return emptyPage;
         const dataSetResponse = await this.api.models.dataSets
@@ -164,7 +165,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
 
         const sqlViews = new Dhis2SqlViews(this.api);
         const pagingToDownload = { page: 1, pageSize: 10000 };
-        const dataSetSettings = config.appSettings.dataSets[dataSet.code];
+        const dataSetSettings = dataSetsConfig.find(ds => ds.configuration.dataSetOriginalCode === dataSet.code);
         if (!dataSetSettings) throw new Error(`Data set settings not found for ID: ${dataSetId}`);
 
         const sqlVariables = {
@@ -181,7 +182,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         const headerRows = await this.getSqlViewHeaders<SqlFieldHeaders>(sqlViews, options, pagingToDownload);
         const rows = await this.getSqlViewRows<Variables, SqlField>(
             sqlViews,
-            useOldPeriods ? dataSetSettings.oldDataSourceId : dataSetSettings.dataSourceId,
+            useOldPeriods ? dataSetSettings.configuration.oldDataSourceId : dataSetSettings.configuration.dataSourceId,
             sqlVariables,
             pagingToDownload
         );
@@ -295,20 +296,22 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         }
     }
 
-    async approve(dataSets: MalDataApprovalItemIdentifier[], log?: Log): Promise<boolean> {
+    async approve(options: {
+        dataSets: MalDataApprovalItemIdentifier[];
+        log?: Log;
+        dataSetConfig: DataSetWithConfigPermissions;
+    }): Promise<boolean> {
+        const { dataSets, log, dataSetConfig } = options;
         try {
             const originalDataSetId = dataSets[0]?.dataSet;
             if (!originalDataSetId) throw Error("No data set ID found");
 
-            const { dataSetId } = await this.getApprovalDataSetId([{ dataSet: originalDataSetId }]);
-            const settings = await this.getSettingByDataSet([dataSetId]);
-            const dataSetSettings = settings.find(setting => setting.dataSetId === dataSetId);
-            if (!dataSetSettings) throw new Error(`Data set settings not found: ${dataSetId}`);
+            const submissionDECode = dataSetConfig.configuration.submissionDateCode;
 
             const dataElement = await getMetadataByIdentifiableToken({
                 api: this.api,
                 metadataType: "dataElements",
-                token: dataSetSettings.dataElements.submissionDate,
+                token: submissionDECode,
             });
 
             const currentDate = getISODate();
@@ -355,7 +358,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
 
             const shouldCompleteDataSet = dataSetsToComplete.length !== 0;
 
-            if (shouldCompleteDataSet) {
+            if (shouldCompleteDataSet && dataSetConfig.configuration.submitAndComplete) {
                 this.logMessage(log, i18n.t("Completing dataset..."));
             }
 
@@ -382,44 +385,24 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         if (log && message) log(message);
     }
 
-    async getApprovalDataSetId(dataApprovalItems: { dataSet: Id }[]) {
-        const dataSetId = dataApprovalItems[0]?.dataSet;
-        if (!dataSetId) throw new Error("Data set not found");
-
-        const { name: dataSetName } = await getMetadataByIdentifiableToken({
-            api: this.api,
-            metadataType: "dataSets",
-            token: dataSetId,
-        });
-
-        const settings = await this.getSettingByDataSet([dataSetId]);
-        const dataSetSettings = settings.find(setting => setting.dataSetId === dataSetId);
-
-        const approvedDataSetCode = dataSetSettings?.approvalDataSetCode;
-        if (!approvedDataSetCode) throw new Error(`Approved data set code not found for data set: ${dataSetName}`);
-
-        const { id: apvdDataSetId } = await getMetadataByIdentifiableToken({
-            api: this.api,
-            metadataType: "dataSets",
-            token: approvedDataSetCode,
-        });
-
-        return { approvalDataSetId: apvdDataSetId, dataSetId };
-    }
-
     async duplicateDataSets(
         dataSets: MalDataApprovalItemIdentifier[],
-        dataElementsWithValues: DataDiffItemIdentifier[]
+        dataElementsWithValues: DataDiffItemIdentifier[],
+        dataSetConfig: DataSetWithConfigPermissions
     ): Promise<boolean> {
         try {
-            const { approvalDataSetId, dataSetId } = await this.getApprovalDataSetId(dataSets);
+            const approvalDataSet = await getMetadataByIdentifiableToken({
+                api: this.api,
+                metadataType: "dataSets",
+                token: dataSetConfig.configuration.dataSetDestinationCode,
+            });
 
             const dataValueSets: DataSetsValueType[] = await this.getDataValueSets(dataSets);
 
             const uniqueDataSets = _.uniqBy(dataSets, "dataSet");
             const DSDataElements = await this.getDSDataElements(uniqueDataSets);
 
-            const ADSDataElements: DataElementsType[] = await this.getADSDataElements(approvalDataSetId);
+            const ADSDataElements: DataElementsType[] = await this.getADSDataElements(approvalDataSet.id);
 
             const dataElementsMatchedArray = DSDataElements.flatMap(DSDataElement => {
                 return DSDataElement.dataSetElements.map(element => {
@@ -433,11 +416,16 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
                 });
             });
 
-            const dataValues = this.makeDataValuesArray(approvalDataSetId, dataValueSets, dataElementsMatchedArray);
+            const dataValues = this.makeDataValuesArray(approvalDataSet.id, dataValueSets, dataElementsMatchedArray);
 
-            await this.addTimestampsToDataValuesArray(approvalDataSetId, dataSets, dataValues, dataSetId);
+            await this.addTimestampsToDataValuesArray(
+                approvalDataSet.id,
+                dataSets,
+                dataValues,
+                dataSetConfig.configuration.approvalDateCode
+            );
 
-            await this.deleteEmptyDataValues(approvalDataSetId, ADSDataElements, dataElementsWithValues);
+            await this.deleteEmptyDataValues(approvalDataSet.id, ADSDataElements, dataElementsWithValues);
             return this.chunkedDataValuePost(dataValues, 3000);
         } catch (error: any) {
             console.debug(error);
@@ -445,9 +433,17 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         }
     }
 
-    async duplicateDataValues(dataValues: DataDiffItemIdentifier[]): Promise<boolean> {
+    async duplicateDataValues(
+        dataValues: DataDiffItemIdentifier[],
+        dataSetConfig: DataSetWithConfigPermissions
+    ): Promise<boolean> {
         try {
-            const { approvalDataSetId, dataSetId } = await this.getApprovalDataSetId(dataValues);
+            const approvalDataSet = await getMetadataByIdentifiableToken({
+                api: this.api,
+                metadataType: "dataSets",
+                token: dataSetConfig.configuration.dataSetDestinationCode,
+            });
+
             const uniqueDataSets = _.uniqBy(dataValues, "dataSet");
             const uniqueDataElementsNames = _.uniq(_.map(dataValues, x => x.dataElement));
 
@@ -455,7 +451,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
 
             const dataValueSets = await this.getDataValueSets(uniqueDataSets);
 
-            const ADSDataElements = await this.getADSDataElements(approvalDataSetId);
+            const ADSDataElements = await this.getADSDataElements(approvalDataSet.id);
 
             const dataElementsMatchedArray = DSDataElements.flatMap(DSDataElement => {
                 return DSDataElement.dataSetElements.flatMap(element => {
@@ -474,11 +470,20 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
                 });
             });
 
-            const apvdDataValues = this.makeDataValuesArray(approvalDataSetId, dataValueSets, dataElementsMatchedArray);
+            const apvdDataValues = this.makeDataValuesArray(
+                approvalDataSet.id,
+                dataValueSets,
+                dataElementsMatchedArray
+            );
 
-            await this.addTimestampsToDataValuesArray(approvalDataSetId, dataValues, apvdDataValues, dataSetId);
+            await this.addTimestampsToDataValuesArray(
+                approvalDataSet.id,
+                dataValues,
+                apvdDataValues,
+                dataSetConfig.configuration.approvalDateCode
+            );
 
-            await this.deleteEmptyDataValues(approvalDataSetId, ADSDataElements, dataValues);
+            await this.deleteEmptyDataValues(approvalDataSet.id, ADSDataElements, dataValues);
 
             return this.chunkedDataValuePost(apvdDataValues, 3000);
         } catch (error: any) {
@@ -488,11 +493,17 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
     }
 
     // TODO: All this logic must be in the domain. ApproveMalDataValuesUseCase.ts
-    async replicateDataValuesInApvdDataSet(originalDataValues: DataDiffItemIdentifier[]): Promise<DataValueStats[]> {
-        const { approvalDataSetId, dataSetId } = await this.getApprovalDataSetId(originalDataValues);
-        const settings = await this.getSettingByDataSet([dataSetId]);
-        const dataSetSettings = settings.find(setting => setting.dataSetId === dataSetId);
-        if (!dataSetSettings) throw new Error(`Data set settings not found: ${dataSetId}`);
+    async replicateDataValuesInApvdDataSet(options: {
+        originalDataValues: DataDiffItemIdentifier[];
+        dataSetConfig: DataSetWithConfigPermissions;
+    }): Promise<DataValueStats[]> {
+        const { originalDataValues, dataSetConfig } = options;
+        const dataSetApproval = await getMetadataByIdentifiableToken({
+            api: this.api,
+            metadataType: "dataSets",
+            token: dataSetConfig.configuration.dataSetDestinationCode,
+        });
+        const approvalDataSetId = dataSetApproval.id;
 
         const approvalDataElements = await this.getADSDataElements(approvalDataSetId);
         const approvalDeByName = _.keyBy(approvalDataElements, dataElement => dataElement.name.toLowerCase());
@@ -500,7 +511,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         const approvalDateDataElement = await getMetadataByIdentifiableToken({
             api: this.api,
             metadataType: "dataElements",
-            token: dataSetSettings.dataElements.approvalDate,
+            token: dataSetConfig.configuration.approvalDateCode,
         });
 
         const approvalDataValues = _(originalDataValues)
@@ -666,16 +677,6 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         });
     }
 
-    private async getApprovalDataSetIdentifier(): Promise<Id> {
-        const { id } = await getMetadataByIdentifiableToken({
-            api: this.api,
-            metadataType: "dataSets",
-            token: MAL_WMR_FORM_APVD_NAME,
-        });
-
-        return process.env.REACT_APP_APPROVE_DATASET_ID ?? id;
-    }
-
     private async deleteEmptyDataValues(
         approvalDataSetId: string,
         approvedDataElements: DataElementsType[],
@@ -751,15 +752,12 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         approvalDataSetId: string,
         actionItems: MalDataApprovalItemIdentifier[] | DataDiffItemIdentifier[],
         dataValues: DataValueType[],
-        originalDataSetId: string
+        approvalDateCode: string
     ) {
-        const settings = await this.getSettingByDataSet([originalDataSetId]);
-        const dataSetSettings = settings.find(setting => setting.dataSetId === originalDataSetId);
-        if (!dataSetSettings) throw new Error(`Data set settings not found: ${originalDataSetId}`);
         const malApprovalDateDataElement = await getMetadataByIdentifiableToken({
             api: this.api,
             metadataType: "dataElements",
-            token: dataSetSettings.dataElements.approvalDate,
+            token: approvalDateCode,
         });
 
         actionItems.forEach(actionItem => {
@@ -839,9 +837,12 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         }
     }
 
-    async duplicateDataValuesAndRevoke(dataValues: DataDiffItemIdentifier[]): Promise<boolean> {
+    async duplicateDataValuesAndRevoke(
+        dataValues: DataDiffItemIdentifier[],
+        dataSetConfig: DataSetWithConfigPermissions
+    ): Promise<boolean> {
         try {
-            const duplicateResponse = await this.duplicateDataValues(dataValues);
+            const duplicateResponse = await this.duplicateDataValues(dataValues, dataSetConfig);
 
             const revokeData: DataDiffItemIdentifier = {
                 dataSet: dataValues[0]?.dataSet ?? "",
@@ -989,21 +990,6 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
             console.debug(error);
         }
     }
-
-    private async getSettingByDataSet(dataSetIds: Id[]) {
-        const response = await this.api.models.dataSets
-            .get({
-                fields: { id: true, code: true },
-                filter: { id: { in: dataSetIds } },
-            })
-            .getData();
-
-        return response.objects.map(dataSet => {
-            const settings = approvalReportSettings.dataSets[dataSet.code];
-            if (!settings) throw new Error(`No settings found for dataSet: ${dataSet.code}`);
-            return { ...settings, dataSetId: dataSet.id };
-        });
-    }
 }
 
 const csvFields = ["dataSet", "orgUnit", "period", "completed"] as const;
@@ -1029,7 +1015,7 @@ function mergeHeadersAndData(
     headers: SqlViewGetData<SqlFieldHeaders>["rows"],
     data: SqlViewGetData<SqlField>["rows"]
 ) {
-    const { sorting, paging, orgUnitIds, periods, approvalStatus, completionStatus } = options; // ?
+    const { sorting, paging, orgUnitIds, periods, approvalStatus, completionStatus } = options;
     const rows: Array<MalDataApprovalItem> = [];
 
     const mapping = _(data)
@@ -1091,7 +1077,6 @@ function mergeHeadersAndData(
 }
 
 export const MAL_WMR_FORM_CODE = "0MAL_5";
-const MAL_WMR_FORM_APVD_NAME = "MAL - WMR Form-APVD";
 const DEFAULT_COC = "Xr12mI7VPn3";
 
 type D2DataValue = DataValueSetsPostRequest["dataValues"][number];

@@ -22,7 +22,10 @@ export class DataValuesD2Repository implements DataValuesRepository {
 
         const res = await res$.getData();
 
-        const dataElementIds = res.dataValues.map(dataValue => dataValue.dataElement);
+        const dataElementIds = _(res.dataValues)
+            .map(dataValue => dataValue.dataElement)
+            .uniq()
+            .value();
 
         const chunkSize = 100;
 
