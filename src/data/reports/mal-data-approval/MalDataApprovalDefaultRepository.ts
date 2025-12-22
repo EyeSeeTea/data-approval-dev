@@ -1077,7 +1077,6 @@ function mergeHeadersAndData(
 }
 
 export const MAL_WMR_FORM_CODE = "0MAL_5";
-const MAL_WMR_FORM_APVD_NAME = "MAL - WMR Form-APVD";
 const DEFAULT_COC = "Xr12mI7VPn3";
 
 type D2DataValue = DataValueSetsPostRequest["dataValues"][number];

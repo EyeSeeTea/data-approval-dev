@@ -1,14 +1,18 @@
+import _ from "../../../../../domain/generic/Collection";
 import { useCallback, useMemo, useState } from "react";
 import { DropdownProps, MultipleDropdownProps } from "@eyeseetea/d2-ui-components";
 import { useAppContext } from "../../../../contexts/app-context";
 import { DataSetsFilter } from "../Filters";
 import { OrgUnitsFilterButtonProps } from "../../../../components/org-units-filter/OrgUnitsFilterButton";
 import { DataSetWithConfigPermissions } from "../../../../../domain/usecases/GetApprovalConfigurationsUseCase";
+import { PeriodType } from "../../../../../domain/common/entities/DataSet";
+import { Maybe } from "../../../../../types/utils";
 
 type DataApprovalFilterProps = {
     values: DataSetsFilter;
     onChange: (filter: DataSetsFilter) => void;
     dataSetsConfig: DataSetWithConfigPermissions[];
+    periodType: Maybe<PeriodType>;
 };
 
 type DataApprovalFilterState = {
@@ -25,12 +29,18 @@ type DataApprovalFilterState = {
         approvalStatus: SingleDropdownHandler;
         approvedStatus: SingleDropdownHandler;
         updateModificationCount: SingleDropdownHandler;
+        periodType: SingleDropdownHandler;
     };
 };
 
 export function useDataApprovalFilters(filterProps: DataApprovalFilterProps): DataApprovalFilterState {
     const { config } = useAppContext();
-    const allDataSets = filterProps.dataSetsConfig.map(ds => ds.dataSet);
+    const allDataSets = filterProps.periodType
+        ? _(filterProps.dataSetsConfig)
+              .map(ds => (ds.dataSet.periodType === filterProps.periodType ? ds.dataSet : undefined))
+              .compact()
+              .value()
+        : [];
     const initialDataSetIds = filterProps.dataSetsConfig.map(ds => ds.dataSet.id);
     const { onChange } = filterProps;
 
@@ -75,6 +85,11 @@ export function useDataApprovalFilters(filterProps: DataApprovalFilterProps): Da
         [setFilterValues]
     );
 
+    const setPeriodType = useCallback<SingleDropdownHandler>(
+        periodType => setFilterValues(prev => ({ ...prev, periodType: periodType })),
+        [setFilterValues]
+    );
+
     const applyFilters = useCallback(() => {
         onChange({ ...filterValues });
     }, [filterValues, onChange]);
@@ -98,6 +113,7 @@ export function useDataApprovalFilters(filterProps: DataApprovalFilterProps): Da
             approvalStatus: setApprovalStatus,
             approvedStatus: setApprovedStatus,
             updateModificationCount: setModificationCount,
+            periodType: setPeriodType,
         },
     };
 }

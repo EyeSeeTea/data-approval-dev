@@ -1,5 +1,5 @@
 import { Id } from "../../domain/common/entities/Base";
-import { DataSet } from "../../domain/common/entities/DataSet";
+import { DataSet, getAllowedPeriodType } from "../../domain/common/entities/DataSet";
 import { OrgUnit } from "../../domain/common/entities/OrgUnit";
 import { DataSetRepository } from "../../domain/common/repositories/DataSetRepository";
 import { FutureData } from "../../domain/generic/Future";
@@ -24,6 +24,7 @@ export class DataSetD2Repository implements DataSetRepository {
                     code: dataSet.code,
                     id: dataSet.id,
                     name: dataSet.name,
+                    periodType: getAllowedPeriodType(dataSet.periodType),
                     organisationUnits: dataSet.organisationUnits.map(
                         (ou): OrgUnit => ({
                             id: ou.id,
@@ -47,6 +48,7 @@ export class DataSetD2Repository implements DataSetRepository {
                         id: d2DataSet.id,
                         name: d2DataSet.name,
                         code: d2DataSet.code,
+                        periodType: getAllowedPeriodType(d2DataSet.periodType),
                         dataElements: d2DataSet.dataSetElements.map(d2DataElement => {
                             return {
                                 id: d2DataElement.dataElement.id,
@@ -85,6 +87,7 @@ export class DataSetD2Repository implements DataSetRepository {
                 code: dataSet.code,
                 id: dataSet.id,
                 name: dataSet.name,
+                periodType: getAllowedPeriodType(dataSet.periodType),
                 organisationUnits: dataSet.organisationUnits.map(
                     (ou): OrgUnit => ({
                         id: ou.id,
@@ -103,6 +106,7 @@ const dataSetFields = {
     id: true,
     name: true,
     code: true,
+    periodType: true,
     dataSetElements: {
         dataElement: {
             id: true,
@@ -128,7 +132,13 @@ const dataSetFields = {
     },
 };
 
-const dataSetListFields = { id: true, code: true, name: true, organisationUnits: { id: true, name: true } } as const;
+const dataSetListFields = {
+    id: true,
+    code: true,
+    name: true,
+    organisationUnits: { id: true, name: true },
+    periodType: true,
+} as const;
 
 type D2DataSetListField = MetadataPick<{
     dataSets: { fields: typeof dataSetListFields };

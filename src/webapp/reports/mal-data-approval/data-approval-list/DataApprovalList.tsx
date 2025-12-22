@@ -13,7 +13,6 @@ import RemoveIcon from "@material-ui/icons/Remove";
 import RestartAltIcon from "@material-ui/icons/Storage";
 import _ from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { sortByName } from "../../../../domain/common/entities/Base";
 import { getOrgUnitIdsFromPaths } from "../../../../domain/common/entities/OrgUnit";
 import { Sorting } from "../../../../domain/common/entities/PaginatedObjects";
 import { MalDataApprovalItem } from "../../../../domain/reports/mal-data-approval/entities/MalDataApprovalItem";
@@ -64,7 +63,7 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
             selectedIds,
         } = useDataApprovalActions({ dataSetsConfig });
         const { columns } = useDataApprovalListColumns();
-        const selectablePeriods = useSelectablePeriods(oldPeriods);
+        const selectablePeriods = useSelectablePeriods(oldPeriods, { dataSetIds: filters.dataSetIds, dataSetsConfig });
 
         useEffect(() => {
             if (globalMessage?.type === "error") snackbar.error(globalMessage.message);
@@ -234,11 +233,6 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                 .value();
         }, [baseConfig.columns, visibleColumns]);
 
-        const filterOptions = useMemo(
-            () => getFilterOptions(dataSetsConfig, selectablePeriods),
-            [dataSetsConfig, selectablePeriods]
-        );
-
         const periodsToggle: TableGlobalAction = {
             name: "switchPeriods",
             text: i18n.t(oldPeriods ? "Use recent periods" : "Use old periods"),
@@ -270,9 +264,8 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                     rows={isLoading ? [] : rows}
                 >
                     <Filters
-                        hideDataSets={false} // perhaps show datasets based on user permissions?
+                        oldPeriods={oldPeriods}
                         values={filters}
-                        options={filterOptions}
                         onChange={setFilters}
                         dataSetsConfig={dataSetsConfig}
                     />
@@ -311,14 +304,6 @@ function getUseCaseOptions(filter: DataSetsFilter, selectablePeriods: string[]) 
         ...filter,
         periods: _.isEmpty(filter.periods) ? selectablePeriods : filter.periods,
         orgUnitIds: getOrgUnitIdsFromPaths(filter.orgUnitPaths),
-    };
-}
-
-function getFilterOptions(configs: DataSetWithConfigPermissions[], selectablePeriods: string[]) {
-    const dataSets = configs.map(config => config.dataSet);
-    return {
-        dataSets: sortByName(dataSets),
-        periods: selectablePeriods,
     };
 }
 

@@ -30,6 +30,7 @@ export class GetApprovalConfigurationsUseCase {
 
             return this.getDataSets(dataSetCodes).map(dataSets => {
                 return _(dataSets)
+                    .filter(ds => ds.periodType !== undefined)
                     .compactMap((dataSet): Maybe<DataSetWithConfigPermissions> => {
                         const config = configurations.find(config => config.dataSetOriginalCode === dataSet.code);
                         if (!config) return undefined;
