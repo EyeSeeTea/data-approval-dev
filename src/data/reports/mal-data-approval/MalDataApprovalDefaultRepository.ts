@@ -35,6 +35,7 @@ import { DataValueStats } from "../../../domain/common/entities/DataValueStats";
 import { DATA_ELEMENT_SUFFIX } from "../../../domain/common/entities/AppSettings";
 import { Log } from "../../../domain/reports/mal-data-approval/usecases/UpdateMalApprovalStatusUseCase";
 import { DataSetWithConfigPermissions } from "../../../domain/usecases/GetApprovalConfigurationsUseCase";
+import { NamedRef } from "../../../domain/common/entities/Ref";
 
 interface VariableHeaders {
     dataSets: string;
@@ -303,6 +304,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
     }): Promise<boolean> {
         const { dataSets, log, dataSetConfig } = options;
         try {
+            const DEFAULT_COC = (await this.getDefaultCombination()).id;
             const originalDataSetId = dataSets[0]?.dataSet;
             if (!originalDataSetId) throw Error("No data set ID found");
 
@@ -391,6 +393,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         dataSetConfig: DataSetWithConfigPermissions
     ): Promise<boolean> {
         try {
+            const DEFAULT_COC = (await this.getDefaultCombination()).id;
             const approvalDataSet = await getMetadataByIdentifiableToken({
                 api: this.api,
                 metadataType: "dataSets",
@@ -422,7 +425,8 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
                 approvalDataSet.id,
                 dataSets,
                 dataValues,
-                dataSetConfig.configuration.approvalDateCode
+                dataSetConfig.configuration.approvalDateCode,
+                DEFAULT_COC
             );
 
             await this.deleteEmptyDataValues(approvalDataSet.id, ADSDataElements, dataElementsWithValues);
@@ -438,6 +442,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         dataSetConfig: DataSetWithConfigPermissions
     ): Promise<boolean> {
         try {
+            const DEFAULT_COC = (await this.getDefaultCombination()).id;
             const approvalDataSet = await getMetadataByIdentifiableToken({
                 api: this.api,
                 metadataType: "dataSets",
@@ -480,7 +485,8 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
                 approvalDataSet.id,
                 dataValues,
                 apvdDataValues,
-                dataSetConfig.configuration.approvalDateCode
+                dataSetConfig.configuration.approvalDateCode,
+                DEFAULT_COC
             );
 
             await this.deleteEmptyDataValues(approvalDataSet.id, ADSDataElements, dataValues);
@@ -498,6 +504,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         dataSetConfig: DataSetWithConfigPermissions;
     }): Promise<DataValueStats[]> {
         const { originalDataValues, dataSetConfig } = options;
+        const DEFAULT_COC = (await this.getDefaultCombination()).id;
         const dataSetApproval = await getMetadataByIdentifiableToken({
             api: this.api,
             metadataType: "dataSets",
@@ -547,7 +554,8 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         const timeStampDataValues = this.generateTimeStampDataValue(
             approvalDataValues,
             approvalDataSetId,
-            approvalDateDataElement.id
+            approvalDateDataElement.id,
+            DEFAULT_COC
         );
 
         const deleteStats = await this.deleteEmptyDataValues(
@@ -652,7 +660,8 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
     private generateTimeStampDataValue(
         dataValues: D2DataValue[],
         approvalDataSetId: Id,
-        dataElementId: Id
+        dataElementId: Id,
+        DEFAULT_COC: string
     ): D2DataValue[] {
         const dataValuesByOrgUnitAndPeriod = _(dataValues)
             .groupBy(item => `${item.orgUnit}-${item.period}`)
@@ -752,7 +761,8 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
         approvalDataSetId: string,
         actionItems: MalDataApprovalItemIdentifier[] | DataDiffItemIdentifier[],
         dataValues: DataValueType[],
-        approvalDateCode: string
+        approvalDateCode: string,
+        DEFAULT_COC: string
     ) {
         const malApprovalDateDataElement = await getMetadataByIdentifiableToken({
             api: this.api,
@@ -990,6 +1000,21 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
             console.debug(error);
         }
     }
+
+    async getDefaultCombination(): Promise<NamedRef> {
+        const response = await this.api.models.categoryOptionCombos
+            .get({
+                fields: { id: true, name: true },
+                paging: false,
+                filters: { name: { eq: "default" } },
+            })
+            .getData();
+
+        const defaultCombo = response.objects[0];
+        if (!defaultCombo) throw new Error("Default category option combo not found");
+
+        return { id: defaultCombo.id, name: defaultCombo.name };
+    }
 }
 
 const csvFields = ["dataSet", "orgUnit", "period", "completed"] as const;
@@ -1077,7 +1102,6 @@ function mergeHeadersAndData(
 }
 
 export const MAL_WMR_FORM_CODE = "0MAL_5";
-const DEFAULT_COC = "Xr12mI7VPn3";
 
 type D2DataValue = DataValueSetsPostRequest["dataValues"][number];
 
