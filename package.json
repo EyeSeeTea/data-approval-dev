@@ -36,6 +36,7 @@
         "font-awesome": "4.7.0",
         "jszip": "^3.10.1",
         "lodash": "4.17.21",
+        "md5.js": "1.3.5",
         "node-html-parser": "5.1.0",
         "postcss-rtl": "1.7.3",
         "purify-ts": "0.16.3",
@@ -68,7 +69,8 @@
         "prepare": "husky install",
         "manifest": "d2-manifest package.json build/manifest.webapp",
         "approve-mal-datavalues": "npx ts-node -P tsconfig-cli.json src/scripts/approve-mal-datavalues.ts",
-        "check-data-differences": "npx ts-node -P tsconfig-cli.json src/scripts/check-data-differences.ts"
+        "check-data-differences": "npx ts-node -P tsconfig-cli.json src/scripts/check-data-differences.ts",
+        "generate-sqlviews": "npx tsx src/scripts/generate-sqlviews.ts"
     },
     "husky": {
         "hooks": {
