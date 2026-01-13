@@ -149,7 +149,7 @@ export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
     }
 }
 
-export const dataSetConfigurationActions = ["read", "complete", "incomplete", "revoke", "submit", "approve"] as const;
+export const dataSetConfigurationActions = ["read", "complete", "incomplete", "submit", "revoke", "approve"] as const;
 
 export type DataSetConfigurationAction = typeof dataSetConfigurationActions[number];
 type DataSetConfigurationError = ValidationError<DataSetConfigurationAttrs>;
