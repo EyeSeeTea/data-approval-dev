@@ -18,26 +18,32 @@ $ PORT=8082 REACT_APP_DHIS2_BASE_URL="https://play.dhis2.org/2.34" yarn start
 
 ## Generate sql view for a dataSet
 
-Script to generate necessary sqlViews for dataSets
+Script to generate necessary sqlViews for dataSets and create a DataSetConfiguration.
 
-if you want to persist the sqlViews to DHIS2 please configure the following variables in your `.env` file:
+If you want to persist the sqlViews and configuration to DHIS2 please configure the following variables in your `.env` file:
 
 ```
 REACT_APP_DHIS2_BASE_URL=http://localhost:8080
 REACT_APP_DHIS2_AUTH='admin:district'
 ```
 
-run the script
+Run the script:
 
 ```shell
 yarn run generate-sqlviews \
 --dataSet MY_DS_CODE \
+--dataSet-destination MY_DS_APPROVAL_CODE \
 --dataElement-submission DATAELEMENT_CODE_SUBMISSION-APVD \
 --dataElement-approval DATAELEMENT_CODE_APPROVAL_DATE-APVD \
 --persist dhis
 ```
 
--   dataSet: dataSet code of the original dataSet
--   dataElement-submission: dataElement code where the submission date is going to be saved (this must be in the APPROVAL dataSet)
--   dataElement-approval: dataElement code where the approval date is going to be saved (this must be in the APPROVAL dataSet)
--   persist: save sqlViews to `dhis` or `disk`
+Parameters:
+
+-   `--dataSet` (`-ds`): dataSet code of the original dataSet
+-   `--dataSet-destination` (`-ds-dest`): dataSet code of the destination/approval dataSet (required)
+-   `--dataElement-submission` (`-de-sub`): dataElement code where the submission date is going to be saved (this must be in the APPROVAL dataSet)
+-   `--dataElement-approval` (`-de-apprv`): dataElement code where the approval date is going to be saved (this must be in the APPROVAL dataSet)
+-   `--persist`: save sqlViews to `dhis` or `disk`
+
+When `--persist dhis` is used, the script also creates a DataSetConfiguration in the DHIS2 DataStore with `submitAndComplete: true`, `revokeAndIncomplete: true`, and empty permissions (only admin users have access to this dataSet. You can edit this in the settings page of the application).

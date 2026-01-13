@@ -4,6 +4,10 @@ import { D2Api, Id } from "../types/d2-api";
 import { ArgumentParser } from "argparse";
 import _ from "lodash";
 import { getUidFromSeed } from "../utils/uid";
+import { DataSetConfiguration } from "../domain/entities/DataSetConfiguration";
+import { DataSetConfigurationD2Repository } from "../data/DataSetConfigurationD2Repository";
+import { UserD2Repository } from "../data/UserD2Repository";
+import { SaveDataSetConfigurationUseCase } from "../domain/usecases/SaveDataSetConfigurationUseCase";
 
 const persistOptions = ["disk", "dhis"] as const;
 type PersistOption = typeof persistOptions[number];
@@ -26,6 +30,12 @@ async function main() {
     parser.add_argument("-de-apprv", "--dataElement-approval", {
         help: "DataElement Approval Date Code",
         metavar: "deApprovalCode",
+    });
+
+    parser.add_argument("-ds-dest", "--dataSet-destination", {
+        help: "DataSet destination code for approval",
+        metavar: "dataSetDestination",
+        required: true,
     });
 
     parser.add_argument("-persist", "--persist", {
@@ -52,6 +62,7 @@ async function main() {
         await generateSqlViews({
             api,
             dataSetCode: args.dataSet,
+            dataSetDestinationCode: args.dataSet_destination,
             deSubmissionCode: args.dataElement_submission,
             deApprovalCode: args.dataElement_approval,
             persistOption,
@@ -107,15 +118,53 @@ async function getDataElementsByCodes(
     return { deSubmissionName: submissionDe.name, deApprovalName: approvalDe.name };
 }
 
+async function saveDataSetConfiguration(
+    api: D2Api,
+    options: {
+        dataSetOriginalCode: string;
+        dataSetDestinationCode: string;
+        submissionDateCode: string;
+        approvalDateCode: string;
+        dataSourceId: string;
+        oldDataSourceId: string;
+    }
+): Promise<void> {
+    const dataSetConfigurationRepository = new DataSetConfigurationD2Repository(api);
+    const userRepository = new UserD2Repository(api);
+    const saveUseCase = new SaveDataSetConfigurationUseCase({
+        dataSetConfigurationRepository,
+        userRepository,
+    });
+
+    const configuration = DataSetConfiguration.initial()
+        .updateDataSetOriginal(options.dataSetOriginalCode)
+        .updateDataSetDestination(options.dataSetDestinationCode)
+        .updateSubmissionDateDataElement(options.submissionDateCode)
+        .updateApprovalDateDataElement(options.approvalDateCode)
+        .updateDataSourceId(options.dataSourceId)
+        .updateOldDataSourceId(options.oldDataSourceId)
+        .updateSubmitAndComplete(true)
+        .updateRevokeAndIncomplete(true);
+
+    return new Promise((resolve, reject) => {
+        saveUseCase.execute(configuration).run(
+            () => resolve(),
+            error => reject(error)
+        );
+    });
+}
+
 async function generateSqlViews(args: {
     api: D2Api;
     dataSetCode: string;
+    dataSetDestinationCode: string;
     deSubmissionCode: string;
     deApprovalCode: string;
     persistOption: PersistOption;
 }): Promise<void> {
-    const { api, dataSetCode, deSubmissionCode, deApprovalCode } = args;
+    const { api, dataSetCode, dataSetDestinationCode, deSubmissionCode, deApprovalCode } = args;
     const dataSet = await getDataSetByCode(api, dataSetCode);
+    await getDataSetByCode(api, dataSetDestinationCode);
     const { deApprovalName, deSubmissionName } = await getDataElementsByCodes(api, [deSubmissionCode, deApprovalCode]);
     const sqlViewData = generateSqlView({ dataSet, deApprovalName, deSubmissionName });
 
@@ -127,6 +176,15 @@ async function generateSqlViews(args: {
         console.debug("SQL views saved to disk");
     } else if (args.persistOption === "dhis") {
         await saveSqlViews(api, sqlViewData);
+        await saveDataSetConfiguration(api, {
+            dataSetOriginalCode: dataSetCode,
+            dataSetDestinationCode: dataSetDestinationCode,
+            submissionDateCode: deSubmissionCode,
+            approvalDateCode: deApprovalCode,
+            dataSourceId: sqlViewData.sqlDataSource.id,
+            oldDataSourceId: sqlViewData.sqlDataSourceOld.id,
+        });
+        console.debug("DataSet configuration saved to DHIS2 DataStore");
     } else {
         throw new Error(`Unsupported persist option: ${args.persistOption}`);
     }
