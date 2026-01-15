@@ -217,7 +217,9 @@ async function saveSqlViews(api: D2Api, sqlViewData: SqlTemplateViewInfo): Promi
         };
     });
 
-    const response = await api.metadata.post({ sqlViews: sqlViewsToSave }).getData();
+    const response = await api.metadata.post({ sqlViews: sqlViewsToSave }, { importMode: "VALIDATE" }).getData();
+
+    fs.writeFileSync("sqlviews-import-report.json", JSON.stringify(sqlViewsToSave, null, 2));
 
     console.debug(`SQL Views saved to DHIS2. Response: ${JSON.stringify(response.stats)}`);
 }

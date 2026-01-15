@@ -47,3 +47,31 @@ Parameters:
 -   `--persist`: save sqlViews to `dhis` or `disk`
 
 When `--persist dhis` is used, the script also creates a DataSetConfiguration in the DHIS2 DataStore with `submitAndComplete: true`, `revokeAndIncomplete: true`, and empty permissions (only admin users have access to this dataSet. You can edit this in the settings page of the application).
+
+## Generate DataSet Approval metadata
+
+Script to clone an existing DataSet and its DataElements with the `-APVD` suffix, generating a new approval DataSet and metadata file.
+
+Make sure the following variables are configured in your `.env` file:
+
+```
+REACT_APP_DHIS2_BASE_URL=http://localhost:8080
+REACT_APP_DHIS2_AUTH='admin:district'
+```
+
+Run the script:
+
+```shell
+yarn run generate-dataset-approval --dataSet MY_DS_CODE
+```
+
+Parameters:
+
+-   `--dataSet` (`-ds`): dataSet code of the original dataSet (required)
+-   `--post`: commit metadata to DHIS2 (default: validate only)
+
+Notes:
+
+-   Writes a metadata JSON file named `<dataSetCode>_<timestamp>.json` in the current directory.
+-   Skips dataElements without code and saves them to `skipped_<dataSetCode>_<timestamp>.json`.
+-   On validation/import errors, saves details to `errors_<dataSetCode>_<timestamp>.json`.
