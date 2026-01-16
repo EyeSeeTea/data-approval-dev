@@ -53,7 +53,7 @@ export async function approveMalDataValues(options: ApprovalOptions): Promise<vo
     const dataSetConfigs = await getConfigUseCase.execute().toPromise();
 
     const { dataSet, orgUnit } = await getMalWMRMetadata(api, dataSetCode, ouOption);
-    console.log(`dataSet original: ${dataSet.name}`);
+    console.debug(`dataSet original: ${dataSet.name}`);
     const malDataApprovalItems = await buildMalApprovalItems(
         dataValueRepository,
         dataSetRepository,

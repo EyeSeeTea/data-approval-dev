@@ -62,7 +62,9 @@ REACT_APP_DHIS2_AUTH='admin:district'
 Run the script:
 
 ```shell
-yarn run generate-dataset-approval --dataSet MY_DS_CODE
+yarn run generate-dataset-approval --dataSet MY_DS_CODE \
+--dataElement-submission "MY_DS_CODE-Submission date module1-APVD" \
+--dataElement-approval "MY_DS_CODE-Approval date module1-APVD"
 ```
 
 Parameters:
@@ -73,5 +75,5 @@ Parameters:
 Notes:
 
 -   Writes a metadata JSON file named `<dataSetCode>_<timestamp>.json` in the current directory.
--   Skips dataElements without code and saves them to `skipped_<dataSetCode>_<timestamp>.json`.
+-   Show dataElements without code and saves them to `warning_<dataSetCode>_<timestamp>.json`.
 -   On validation/import errors, saves details to `errors_<dataSetCode>_<timestamp>.json`.

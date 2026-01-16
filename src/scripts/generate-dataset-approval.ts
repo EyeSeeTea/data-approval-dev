@@ -1,3 +1,4 @@
+import _ from "lodash";
 import "dotenv-flow/config";
 import fs from "fs";
 import { D2Api } from "../types/d2-api";
@@ -22,8 +23,19 @@ async function main() {
 
     parser.add_argument("--post", {
         help: "Commit changes to DHIS2 (default: validate only)",
-        action: "store_true",
         default: false,
+    });
+
+    parser.add_argument("--dataElement-submission", {
+        help: "Name/code for submission datetime dataElement",
+        metavar: "name",
+        required: false,
+    });
+
+    parser.add_argument("--dataElement-approval", {
+        help: "Name/code for approval datetime dataElement",
+        metavar: "name",
+        required: false,
     });
 
     try {
@@ -36,14 +48,20 @@ async function main() {
 
         const api = new D2Api({ baseUrl, auth: { username, password } });
 
-        await generateDataSetApproval({ api, dataSetCode: args.dataSet, commit: args.post });
+        await generateDataSetApproval({
+            api,
+            dataSetCode: args.dataSet,
+            commit: args.post,
+            dataElementSubmission: args.dataElement_submission,
+            dataElementApproval: args.dataElement_approval,
+        });
     } catch (err) {
         console.error(err);
         process.exit(1);
     }
 }
 
-type SkippedDataElement = {
+type WarningDataElement = {
     id: string;
     name: string;
     reason: string;
@@ -81,8 +99,14 @@ type NewSection = Omit<D2Section, "dataSet"> & {
     }>;
 };
 
-async function generateDataSetApproval(options: { api: D2Api; dataSetCode: string; commit: boolean }): Promise<void> {
-    const { api, dataSetCode, commit } = options;
+async function generateDataSetApproval(options: {
+    api: D2Api;
+    dataSetCode: string;
+    commit: boolean;
+    dataElementSubmission?: string;
+    dataElementApproval?: string;
+}): Promise<void> {
+    const { api, dataSetCode, commit, dataElementSubmission, dataElementApproval } = options;
 
     const originalDataSet = await getDataSetByCode(api, dataSetCode);
 
@@ -90,16 +114,30 @@ async function generateDataSetApproval(options: { api: D2Api; dataSetCode: strin
 
     const originalDataElements = await getDataElementsDetails(api, dataElementIds);
 
-    const { validDataElements, skippedDataElements } = filterDataElementsWithCode(originalDataElements);
+    const { validDataElements, warningDataElements } = filterDataElementsWithCode(originalDataElements);
 
-    if (skippedDataElements.length > 0) {
-        saveSkippedDataElementsToFile(skippedDataElements, dataSetCode);
+    if (warningDataElements.length > 0) {
+        saveWarningDataElementsToFile(warningDataElements, dataSetCode);
         console.warn(
-            `Skipped ${skippedDataElements.length} dataElement(s) without code. See skipped file for details.`
+            `Warning: ${warningDataElements.length} dataElement(s) without code. See warnings file for details.`
         );
     }
 
     const newDataElements = validDataElements.map(transformDataElement);
+
+    const customDataElements: NewDataElement[] = [];
+
+    if (dataElementSubmission) {
+        const submissionDE = createCustomDataElement(dataElementSubmission);
+        customDataElements.push(submissionDE);
+    }
+
+    if (dataElementApproval) {
+        const approvalDE = createCustomDataElement(dataElementApproval);
+        customDataElements.push(approvalDE);
+    }
+
+    const allNewDataElements = [...newDataElements, ...customDataElements];
 
     const dataElementIdMap = createDataElementIdMap(validDataElements, newDataElements);
 
@@ -119,18 +157,19 @@ async function generateDataSetApproval(options: { api: D2Api; dataSetCode: strin
     const newDataSet = transformDataSet(
         originalDataSet,
         dataElementIdMap,
-        newSections.map(s => s.id)
+        newSections.map(s => s.id),
+        customDataElements.map(de => de.id)
     );
 
     const existingMetadata = await getExistingMetadata(
         api,
         newDataSet.id,
-        newDataElements.map(de => de.id),
+        allNewDataElements.map(de => de.id),
         newSections.map(s => s.id)
     );
 
     const finalMetadata = mergeWithExisting(
-        { dataSets: [newDataSet], dataElements: newDataElements, sections: newSections },
+        { dataSets: [newDataSet], dataElements: allNewDataElements, sections: newSections },
         existingMetadata
     );
 
@@ -143,31 +182,28 @@ async function generateDataSetApproval(options: { api: D2Api; dataSetCode: strin
 
 function filterDataElementsWithCode(dataElements: D2DataElement[]): {
     validDataElements: D2DataElement[];
-    skippedDataElements: SkippedDataElement[];
+    warningDataElements: WarningDataElement[];
 } {
-    const validDataElements: D2DataElement[] = [];
-    const skippedDataElements: SkippedDataElement[] = [];
+    const warningDataElements: WarningDataElement[] = [];
 
     for (const de of dataElements) {
-        if (de.code && de.code.trim() !== "") {
-            validDataElements.push(de);
-        } else {
-            skippedDataElements.push({
+        if (!de.code || de.code.trim() === "") {
+            warningDataElements.push({
                 id: de.id,
                 name: de.name,
-                reason: "DataElement does not have a code and cannot be cloned",
+                reason: "DataElement does not have a code - cloned with empty code",
             });
         }
     }
 
-    return { validDataElements, skippedDataElements };
+    return { validDataElements: dataElements, warningDataElements };
 }
 
-function saveSkippedDataElementsToFile(skipped: SkippedDataElement[], dataSetCode: string): void {
+function saveWarningDataElementsToFile(warnings: WarningDataElement[], dataSetCode: string): void {
     const timestamp = Date.now();
-    const filename = `skipped_${dataSetCode}_${timestamp}.json`;
-    fs.writeFileSync(filename, JSON.stringify(skipped, null, 2));
-    console.debug(`Skipped dataElements saved to: ${filename}`);
+    const filename = `warnings_dataelements_${dataSetCode}_${timestamp}.json`;
+    fs.writeFileSync(filename, JSON.stringify(warnings, null, 2));
+    console.debug(`Warning dataElements saved to: ${filename}`);
 }
 
 type D2DataSet = {
@@ -308,6 +344,26 @@ function addSuffix(value: string): string {
     return `${value}${SUFFIX}`;
 }
 
+function ensureSuffix(value: string): string {
+    return value.endsWith(SUFFIX) ? value : addSuffix(value);
+}
+
+function createCustomDataElement(name: string): NewDataElement {
+    const nameWithSuffix = ensureSuffix(name);
+    const shortName = nameWithSuffix.substring(0, MAX_SHORT_NAME_LENGTH);
+    const id = getUidFromSeed(nameWithSuffix);
+
+    return {
+        id,
+        name: nameWithSuffix,
+        shortName,
+        code: nameWithSuffix,
+        valueType: "DATETIME" as const,
+        domainType: "AGGREGATE" as const,
+        aggregationType: "NONE" as const,
+    };
+}
+
 function transformDataElement(original: D2DataElement): NewDataElement {
     const {
         dataElementGroups: _deGroups,
@@ -317,8 +373,9 @@ function transformDataElement(original: D2DataElement): NewDataElement {
         ...rest
     } = original;
 
-    const newCode = addSuffix(original.code);
-    const newId = getUidFromSeed(newCode);
+    const hasCode = original.code && original.code.trim() !== "";
+    const newCode = hasCode ? addSuffix(original.code) : "";
+    const newId = hasCode ? getUidFromSeed(newCode) : getUidFromSeed(addSuffix(original.id));
 
     return {
         ...rest,
@@ -350,16 +407,26 @@ function transformSection(
     const newCode = addSuffix(original.code);
     const newId = getUidFromSeed(newCode);
 
-    const newDataElements = (original.dataElements ?? [])
-        .filter(de => dataElementIdMap[de.id] !== undefined)
-        .map(de => ({ id: dataElementIdMap[de.id]! }));
+    const newDataElements = _(original.dataElements ?? [])
+        .map(de => {
+            const newId = dataElementIdMap[de.id];
+            return newId ? { id: newId } : undefined;
+        })
+        .compact()
+        .value();
 
-    const newGreyedFields = (original.greyedFields ?? [])
-        .filter(gf => dataElementIdMap[gf.dataElement.id] !== undefined)
-        .map(gf => ({
-            dataElement: { id: dataElementIdMap[gf.dataElement.id]! },
-            categoryOptionCombo: { id: gf.categoryOptionCombo.id },
-        }));
+    const newGreyedFields = _(original.greyedFields ?? [])
+        .map(gf => {
+            const newDataElementId = dataElementIdMap[gf.dataElement.id];
+            return newDataElementId
+                ? {
+                      dataElement: { id: newDataElementId },
+                      categoryOptionCombo: { id: gf.categoryOptionCombo.id },
+                  }
+                : undefined;
+        })
+        .compact()
+        .value();
 
     return {
         ...rest,
@@ -375,14 +442,14 @@ function transformSection(
 function transformDataSet(
     original: D2DataSet,
     dataElementIdMap: Record<string, string>,
-    newSectionIds: string[]
+    newSectionIds: string[],
+    customDataElementIds: string[] = []
 ): NewDataSet {
     const { workflow: _workflow, dataEntryForm: _dataEntryForm, id: _id, sections: _sections, ...rest } = original;
 
     const newCode = addSuffix(original.code);
     const newId = getUidFromSeed(newCode);
 
-    // Filter out dataSetElements whose dataElement was skipped (no code)
     const newDataSetElements = (original.dataSetElements ?? [])
         .filter(dse => dataElementIdMap[dse.dataElement.id] !== undefined)
         .map(dse => {
@@ -397,13 +464,17 @@ function transformDataSet(
             };
         });
 
+    const customDataSetElements = customDataElementIds.map(id => ({
+        dataElement: { id },
+    }));
+
     return {
         ...rest,
         id: newId,
         name: addSuffix(original.name),
         shortName: addSuffix(original.shortName),
         code: newCode,
-        dataSetElements: newDataSetElements,
+        dataSetElements: [...newDataSetElements, ...customDataSetElements],
         sections: newSectionIds.map(id => ({ id })),
     };
 }
@@ -414,7 +485,6 @@ async function getExistingMetadata(
     dataElementIds: string[],
     sectionIds: string[]
 ): Promise<ExistingMetadata> {
-    // Fetch existing dataSet
     const dataSetResponse = await api.models.dataSets
         .get({
             fields: { $owner: true },
@@ -425,7 +495,6 @@ async function getExistingMetadata(
 
     const existingDataSet = dataSetResponse.objects[0];
 
-    // Fetch existing dataElements using chunks
     const existingDataElements = await getInChunks(dataElementIds, async idsChunk => {
         const response = await api.models.dataElements
             .get({
@@ -438,7 +507,6 @@ async function getExistingMetadata(
         return response.objects;
     });
 
-    // Fetch existing sections using chunks
     const existingSections =
         sectionIds.length > 0
             ? await getInChunks(sectionIds, async idsChunk => {
@@ -465,11 +533,9 @@ async function getExistingMetadata(
 }
 
 function mergeWithExisting(newMetadata: Metadata, existingMetadata: ExistingMetadata): Metadata {
-    // Merge dataSet: preserve existing fields, override with new values
     const newDataSet = newMetadata.dataSets[0];
     const mergedDataSet = existingMetadata.dataSet ? { ...existingMetadata.dataSet, ...newDataSet } : newDataSet;
 
-    // Merge dataElements: for each new element, if exists, merge with existing
     const existingDataElementMap = new Map(existingMetadata.dataElements.map(de => [de.id, de]));
 
     const mergedDataElements = newMetadata.dataElements.map(newDE => {
@@ -477,7 +543,6 @@ function mergeWithExisting(newMetadata: Metadata, existingMetadata: ExistingMeta
         return existingDE ? { ...existingDE, ...newDE } : newDE;
     });
 
-    // Merge sections: for each new section, if exists, merge with existing
     const existingSectionMap = new Map(existingMetadata.sections.map(s => [s.id, s]));
 
     const mergedSections = newMetadata.sections.map(newSection => {
@@ -550,13 +615,11 @@ async function persistMetadata(
             )}`
         );
 
-        // Check for errors in typeReports even on success
         const errors = extractErrorsFromTypeReports(response.typeReports);
         if (errors.length > 0) {
             saveErrorsToFile(errors, dataSetCode);
         }
     } catch (err: unknown) {
-        // Handle HTTP errors (e.g., 409 Conflict)
         if (isHttpError(err)) {
             const responseData = err.response?.data?.response as MetadataResponse | undefined;
             if (responseData?.typeReports) {

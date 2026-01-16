@@ -1,4 +1,3 @@
-import { Ref } from "../../../common/entities/Base";
 import { NamedRef } from "../../../common/entities/Ref";
 import { FutureData } from "../../../generic/Future";
 
