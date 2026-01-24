@@ -9,6 +9,7 @@ import { DATA_ELEMENT_SUFFIX } from "../domain/common/entities/AppSettings";
 
 const SUFFIX = DATA_ELEMENT_SUFFIX;
 const MAX_SHORT_NAME_LENGTH = 50;
+const MAX_NAME_LENGTH = 230;
 
 async function main() {
     const parser = new ArgumentParser({
@@ -17,25 +18,23 @@ async function main() {
 
     parser.add_argument("-ds", "--dataSet", {
         help: "DataSet code",
-        metavar: "dataSet",
         required: true,
     });
 
     parser.add_argument("--post", {
         help: "Commit changes to DHIS2 (default: validate only)",
         default: false,
+        action: "storeTrue",
     });
 
     parser.add_argument("--dataElement-submission", {
         help: "Name/code for submission datetime dataElement",
-        metavar: "name",
-        required: false,
+        required: true,
     });
 
     parser.add_argument("--dataElement-approval", {
         help: "Name/code for approval datetime dataElement",
-        metavar: "name",
-        required: false,
+        required: true,
     });
 
     try {
@@ -125,17 +124,9 @@ async function generateDataSetApproval(options: {
 
     const newDataElements = validDataElements.map(transformDataElement);
 
-    const customDataElements: NewDataElement[] = [];
-
-    if (dataElementSubmission) {
-        const submissionDE = createCustomDataElement(dataElementSubmission);
-        customDataElements.push(submissionDE);
-    }
-
-    if (dataElementApproval) {
-        const approvalDE = createCustomDataElement(dataElementApproval);
-        customDataElements.push(approvalDE);
-    }
+    const submissionDE = dataElementSubmission ? [createCustomDataElement(dataElementSubmission)] : [];
+    const approvalDE = dataElementApproval ? [createCustomDataElement(dataElementApproval)] : [];
+    const customDataElements = [...submissionDE, ...approvalDE];
 
     const allNewDataElements = [...newDataElements, ...customDataElements];
 
@@ -227,7 +218,6 @@ type D2DataElement = {
     shortName: string;
     code: string;
     dataElementGroups?: unknown[];
-    dimensionItem?: string;
     dataSetElements?: unknown[];
     [key: string]: unknown;
 };
@@ -244,7 +234,7 @@ type NewDataSet = Omit<D2DataSet, "workflow" | "dataEntryForm" | "sections"> & {
     sections: Array<{ id: string }>;
 };
 
-type NewDataElement = Omit<D2DataElement, "dataElementGroups" | "dimensionItem" | "dataSetElements"> & {
+type NewDataElement = Omit<D2DataElement, "dataElementGroups" | "dataSetElements"> & {
     id: string;
     name: string;
     shortName: string;
@@ -365,25 +355,32 @@ function createCustomDataElement(name: string): NewDataElement {
 }
 
 function transformDataElement(original: D2DataElement): NewDataElement {
-    const {
-        dataElementGroups: _deGroups,
-        dimensionItem: _dimItem,
-        dataSetElements: _dsElements,
-        id: _id,
-        ...rest
-    } = original;
+    const { dataElementGroups: _deGroups, dataSetElements: _dsElements, id: _id, ...rest } = original;
 
     const hasCode = original.code && original.code.trim() !== "";
-    const newCode = hasCode ? addSuffix(original.code) : "";
+    const newCode = hasCode ? addSuffixAndTruncate(original.code, MAX_SHORT_NAME_LENGTH) : "";
     const newId = hasCode ? getUidFromSeed(newCode) : getUidFromSeed(addSuffix(original.id));
 
     return {
         ...rest,
         id: newId,
-        name: addSuffix(original.name),
-        shortName: addSuffix(original.shortName),
+        name: addSuffixAndTruncate(original.name, MAX_NAME_LENGTH),
+        shortName: addSuffixAndTruncate(original.shortName, MAX_SHORT_NAME_LENGTH),
         code: newCode,
     };
+}
+
+function addSuffixAndTruncate(code: string | undefined, maxLength: number): string {
+    if (!code) return "";
+
+    const codeLen = code.length;
+
+    if (codeLen + SUFFIX.length <= maxLength) {
+        return addSuffix(code);
+    } else {
+        const truncatedCode = code.substring(0, maxLength - SUFFIX.length);
+        return addSuffix(truncatedCode);
+    }
 }
 
 function createDataElementIdMap(originals: D2DataElement[], transformed: NewDataElement[]): Record<string, string> {

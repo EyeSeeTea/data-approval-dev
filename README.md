@@ -64,7 +64,8 @@ Run the script:
 ```shell
 yarn run generate-dataset-approval --dataSet MY_DS_CODE \
 --dataElement-submission "MY_DS_CODE-Submission date module1-APVD" \
---dataElement-approval "MY_DS_CODE-Approval date module1-APVD"
+--dataElement-approval "MY_DS_CODE-Approval date module1-APVD" \
+--persist
 ```
 
 Parameters:
