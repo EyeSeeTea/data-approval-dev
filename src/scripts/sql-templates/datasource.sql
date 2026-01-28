@@ -85,7 +85,7 @@ WHERE  periodid in (select periodid from period where periodtypeid = (select per
                                      (dataapproval.dataapprovallevelid = dataapprovallevel.dataapprovallevelid)))
 WHERE organisationunit.path ~ (replace('${orgUnitRoot}', '-', '|'))
   AND organisationunit.uid ~ ('^' || replace('${orgUnits}', '-', '|') || '$')
-  AND _periodstructure.monthly ~ ('^' || replace('${periods}', '-', '|') || '$')
+  AND _periodstructure.<%= periodTypeColumn %> ~ ('^' || replace('${periods}', '-', '|') || '$')
   AND (completedatasetregistration.completed IS NOT NULL)::text ~ ('^' || replace('${completed}', '-', '|') || '$')
   AND (dataapproval.accepted IS NOT NULL)::text ~ ('^' || replace('${approved}', '-', '|') || '$')
  ORDER BY

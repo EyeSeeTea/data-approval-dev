@@ -146,8 +146,13 @@ async function saveDataSetConfiguration(
         .updateSubmitAndComplete(true)
         .updateRevokeAndIncomplete(true);
 
+    const configurationWithSeededId = DataSetConfiguration.create({
+        ...configuration,
+        id: getUidFromSeed(configuration.code),
+    });
+
     return new Promise((resolve, reject) => {
-        saveUseCase.execute(configuration).run(
+        saveUseCase.execute(configurationWithSeededId).run(
             () => resolve(),
             error => reject(error)
         );

@@ -24,7 +24,7 @@ async function main() {
     parser.add_argument("--post", {
         help: "Commit changes to DHIS2 (default: validate only)",
         default: false,
-        action: "storeTrue",
+        action: "store_true",
     });
 
     parser.add_argument("--dataElement-submission", {
@@ -63,6 +63,14 @@ async function main() {
 type WarningDataElement = {
     id: string;
     name: string;
+    reason: string;
+};
+
+type TrimmedNameDataElement = {
+    originalId: string;
+    cloneId: string;
+    originalName: string;
+    trimmedName: string;
     reason: string;
 };
 
@@ -113,7 +121,10 @@ async function generateDataSetApproval(options: {
 
     const originalDataElements = await getDataElementsDetails(api, dataElementIds);
 
-    const { validDataElements, warningDataElements } = filterDataElementsWithCode(originalDataElements);
+    const { trimmedDataElements, trimmedOriginalDataElements, trimmedNameDataElements } =
+        trimDataElementNames(originalDataElements);
+
+    const { validDataElements, warningDataElements } = filterDataElementsWithCode(trimmedDataElements);
 
     if (warningDataElements.length > 0) {
         saveWarningDataElementsToFile(warningDataElements, dataSetCode);
@@ -128,9 +139,17 @@ async function generateDataSetApproval(options: {
     const approvalDE = dataElementApproval ? [createCustomDataElement(dataElementApproval)] : [];
     const customDataElements = [...submissionDE, ...approvalDE];
 
-    const allNewDataElements = [...newDataElements, ...customDataElements];
+    const allNewDataElements = [...trimmedOriginalDataElements, ...newDataElements, ...customDataElements];
 
     const dataElementIdMap = createDataElementIdMap(validDataElements, newDataElements);
+    const trimmedNameWarnings = buildTrimmedNameWarnings(trimmedNameDataElements, dataElementIdMap);
+
+    if (trimmedNameWarnings.length > 0) {
+        saveTrimmedNameDataElementsToFile(trimmedNameWarnings, dataSetCode);
+        console.warn(
+            `Warning: ${trimmedNameWarnings.length} dataElement(s) had name trimmed. See trimmed file for details.`
+        );
+    }
 
     const originalSections = await getSectionsByDataSet(api, originalDataSet.id);
 
@@ -195,6 +214,13 @@ function saveWarningDataElementsToFile(warnings: WarningDataElement[], dataSetCo
     const filename = `warnings_dataelements_${dataSetCode}_${timestamp}.json`;
     fs.writeFileSync(filename, JSON.stringify(warnings, null, 2));
     console.debug(`Warning dataElements saved to: ${filename}`);
+}
+
+function saveTrimmedNameDataElementsToFile(trimmed: TrimmedNameDataElement[], dataSetCode: string): void {
+    const timestamp = Date.now();
+    const filename = `trimmed_names_${dataSetCode}_${timestamp}.json`;
+    fs.writeFileSync(filename, JSON.stringify(trimmed, null, 2));
+    console.debug(`Trimmed name dataElements saved to: ${filename}`);
 }
 
 type D2DataSet = {
@@ -336,6 +362,66 @@ function addSuffix(value: string): string {
 
 function ensureSuffix(value: string): string {
     return value.endsWith(SUFFIX) ? value : addSuffix(value);
+}
+
+function trimNameForSuffix(name: string): { trimmedName: string; wasTrimmed: boolean } {
+    const maxLength = MAX_NAME_LENGTH - SUFFIX.length;
+    const trimmedName = name.length > maxLength ? name.slice(0, maxLength) : name;
+
+    return { trimmedName, wasTrimmed: trimmedName !== name };
+}
+
+function trimDataElementNames(dataElements: D2DataElement[]): {
+    trimmedDataElements: D2DataElement[];
+    trimmedOriginalDataElements: D2DataElement[];
+    trimmedNameDataElements: Array<Omit<TrimmedNameDataElement, "cloneId">>;
+} {
+    const trimmedDataElements = dataElements.map(dataElement => {
+        const { trimmedName, wasTrimmed } = trimNameForSuffix(dataElement.name);
+        return wasTrimmed ? { ...dataElement, name: trimmedName } : dataElement;
+    });
+
+    const trimmedOriginalDataElements = _(dataElements)
+        .map(dataElement => {
+            const { trimmedName, wasTrimmed } = trimNameForSuffix(dataElement.name);
+            return wasTrimmed ? { ...dataElement, name: trimmedName } : undefined;
+        })
+        .compact()
+        .value();
+
+    const trimmedNameDataElements = _(dataElements)
+        .map(dataElement => {
+            const { trimmedName, wasTrimmed } = trimNameForSuffix(dataElement.name);
+            return wasTrimmed
+                ? {
+                      originalId: dataElement.id,
+                      originalName: dataElement.name,
+                      trimmedName,
+                      reason: `Name exceeds ${MAX_NAME_LENGTH - SUFFIX.length} characters`,
+                  }
+                : undefined;
+        })
+        .compact()
+        .value();
+
+    return { trimmedDataElements, trimmedOriginalDataElements, trimmedNameDataElements };
+}
+
+function buildTrimmedNameWarnings(
+    trimmedNameDataElements: Array<Omit<TrimmedNameDataElement, "cloneId">>,
+    dataElementIdMap: Record<string, string>
+): TrimmedNameDataElement[] {
+    return _.compact(
+        trimmedNameDataElements.map(trimmed => {
+            const cloneId = dataElementIdMap[trimmed.originalId];
+            return cloneId
+                ? {
+                      ...trimmed,
+                      cloneId,
+                  }
+                : undefined;
+        })
+    );
 }
 
 function createCustomDataElement(name: string): NewDataElement {
