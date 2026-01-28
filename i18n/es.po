@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: i18next-conv\n"
-"POT-Creation-Date: 2026-01-13T11:32:45.837Z\n"
+"POT-Creation-Date: 2026-01-28T23:21:16.585Z\n"
 "PO-Revision-Date: 2018-10-25T09:02:35.143Z\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -172,7 +172,7 @@ msgstr ""
 msgid "Error when trying to check difference in data values"
 msgstr ""
 
-msgid "Data Approval Report"
+msgid "Data Approval Extended"
 msgstr ""
 
 msgid "No dataSets configuration found."

@@ -25,7 +25,7 @@ const MalDataApprovalStatusReport: React.FC = () => {
         <div className={classes.wrapper}>
             <div className={classes.container}>
                 <Typography variant="h5" gutterBottom>
-                    {i18n.t("Data Approval Report")}
+                    {i18n.t("Data Approval Extended")}
                 </Typography>
 
                 {isAdmin && (

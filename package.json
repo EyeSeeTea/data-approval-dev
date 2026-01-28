@@ -1,6 +1,6 @@
 {
-    "name": "data-approval-dev",
-    "description": "Approval Report",
+    "name": "data-approval-extended",
+    "description": "Data Approval Extended",
     "version": "1.0.0-beta.1",
     "license": "GPL-3.0",
     "author": "EyeSeeTea team",
@@ -128,8 +128,8 @@
         "wait-on": "6.0.0"
     },
     "manifest.webapp": {
-        "name": "Approval Report",
-        "description": "Approval Report",
+        "name": "Data Approval Extended",
+        "description": "Data Approval Extended",
         "icons": {
             "48": "mal-icon.png"
         },
