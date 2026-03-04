@@ -7,12 +7,16 @@ import { MalDataApprovalItemIdentifier } from "../entities/MalDataApprovalItem";
 import { MalDataApprovalRepository } from "../repositories/MalDataApprovalRepository";
 import { DataDiffItemIdentifier } from "../entities/DataDiffItem";
 import { DataSetWithConfigPermissions } from "../../../usecases/GetApprovalConfigurationsUseCase";
+import { UserReadableDataElementsService } from "../services/UserReadableDataElementsService";
+import { Id } from "../../../common/entities/Base";
+import { Maybe } from "../../../../types/utils";
 
 export class UpdateMalApprovalStatusUseCase {
     constructor(
         private approvalRepository: MalDataApprovalRepository,
         private dataValueRepository: DataValuesRepository,
-        private dataSetRepository: DataSetRepository
+        private dataSetRepository: DataSetRepository,
+        private userReadableDataElementsService: UserReadableDataElementsService
     ) {}
 
     async execute(options: {
@@ -30,11 +34,25 @@ export class UpdateMalApprovalStatusUseCase {
             .map(item => item.dataSet)
             .uniq()
             .value();
+        const isCurrentUserSuperAdmin = await this.userReadableDataElementsService.isCurrentUserSuperAdmin();
+        const shouldValidateAnyDataSet = dataSetIds.some(dataSetId =>
+            shouldValidateDataElementGroupForDataSet(dataSetsConfig, dataSetId, isCurrentUserSuperAdmin)
+        );
+        const allowedOriginalDataElementIds = shouldValidateAnyDataSet
+            ? await this.userReadableDataElementsService.getAllowedOriginalDataElementIds()
+            : [];
 
         const result = await promiseMap(dataSetIds, async dataSetId => {
             const itemsToUpdate = itemsByDataSet[dataSetId];
             const config = dataSetsConfig.find(config => config.dataSet.id === dataSetId);
             if (!itemsToUpdate || !config) return true;
+            const allowedDataElementIdsForDataSet = shouldValidateDataElementGroupForDataSet(
+                dataSetsConfig,
+                dataSetId,
+                isCurrentUserSuperAdmin
+            )
+                ? allowedOriginalDataElementIds
+                : undefined;
 
             switch (action) {
                 case "complete":
@@ -44,7 +62,11 @@ export class UpdateMalApprovalStatusUseCase {
                     return this.approvalRepository.approve({ dataSets: itemsToUpdate, log, dataSetConfig: config });
                 case "duplicate": {
                     // "Approve" in UI
-                    const dataElementsWithValues = await this.getDataElementsToDuplicate(itemsToUpdate, dataSetsConfig);
+                    const dataElementsWithValues = await this.getDataElementsToDuplicate(
+                        itemsToUpdate,
+                        dataSetsConfig,
+                        allowedDataElementIdsForDataSet
+                    );
                     const stats = await this.approvalRepository.replicateDataValuesInApvdDataSet({
                         originalDataValues: dataElementsWithValues,
                         dataSetConfig: config,
@@ -71,13 +93,16 @@ export class UpdateMalApprovalStatusUseCase {
 
     private async getDataElementsToDuplicate(
         items: MalDataApprovalItemIdentifier[],
-        dataSetsConfig: DataSetWithConfigPermissions[]
+        dataSetsConfig: DataSetWithConfigPermissions[],
+        allowedOriginalDataElementIds: Maybe<Id[]>
     ): Promise<DataDiffItemIdentifier[]> {
         const dataElementsWithValues = await promiseMap(items, async item => {
             return await new WmrDiffReport(this.dataValueRepository, this.dataSetRepository, dataSetsConfig).getDiff(
                 item.dataSet,
                 item.orgUnit,
-                item.period
+                item.period,
+                false,
+                allowedOriginalDataElementIds
             );
         });
 
@@ -103,6 +128,17 @@ export class UpdateMalApprovalStatusUseCase {
             .compact()
             .value();
     }
+}
+
+function shouldValidateDataElementGroupForDataSet(
+    dataSetsConfig: DataSetWithConfigPermissions[],
+    dataSetId: Id,
+    isCurrentUserSuperAdmin: boolean
+): boolean {
+    if (isCurrentUserSuperAdmin) return false;
+
+    const dataSetConfig = dataSetsConfig.find(config => config.dataSet.id === dataSetId);
+    return dataSetConfig?.configuration.validateDataElementGroup || false;
 }
 
 type UpdateAction =

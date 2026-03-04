@@ -18,6 +18,9 @@ import {
 } from "../domain/usecases/GetApprovalConfigurationsUseCase";
 import { DataSetConfigurationD2Repository } from "../data/DataSetConfigurationD2Repository";
 import { UserD2Repository } from "../data/UserD2Repository";
+import { DataElementGroupD2Repository } from "../data/reports/mal-data-approval/DataElementGroupD2Repository";
+import { UserReadableDataElementsService } from "../domain/reports/mal-data-approval/services/UserReadableDataElementsService";
+import { Maybe } from "../types/utils";
 
 const GLOBAL_OU = "WHO-HQ";
 const DEFAULT_START_YEAR = 2001;
@@ -42,7 +45,12 @@ export async function approveMalDataValues(options: ApprovalOptions): Promise<vo
     const dataValueRepository = new DataValuesD2Repository(api);
     const dataSetRepository = new DataSetD2Repository(api);
     const userRepository = new UserD2Repository(api);
+    const dataElementGroupRepository = new DataElementGroupD2Repository(api);
     const dataSetConfigurationRepository = new DataSetConfigurationD2Repository(api);
+    const userReadableDataElementsService = new UserReadableDataElementsService(
+        userRepository,
+        dataElementGroupRepository
+    );
 
     const getConfigUseCase = new GetApprovalConfigurationsUseCase({
         dataSetRepository,
@@ -54,20 +62,27 @@ export async function approveMalDataValues(options: ApprovalOptions): Promise<vo
 
     const { dataSet, orgUnit } = await getMalWMRMetadata(api, dataSetCode, ouOption);
     console.debug(`dataSet original: ${dataSet.name}`);
+    const config = dataSetConfigs.find(config => config.dataSet.id === dataSet.id);
+    if (!config) {
+        console.error(`Approval configuration not found for dataSet ${dataSet.name} (${dataSet.id})`);
+        return;
+    }
+
+    const isCurrentUserSuperAdmin = await userReadableDataElementsService.isCurrentUserSuperAdmin();
+    const shouldValidateDataElementGroup = config.configuration.validateDataElementGroup && !isCurrentUserSuperAdmin;
+    const allowedOriginalDataElementIds = shouldValidateDataElementGroup
+        ? await userReadableDataElementsService.getAllowedOriginalDataElementIds()
+        : undefined;
+
     const malDataApprovalItems = await buildMalApprovalItems(
         dataValueRepository,
         dataSetRepository,
         dataSet.id,
         orgUnit.id,
         dataSetConfigs,
-        yearOption
+        yearOption,
+        allowedOriginalDataElementIds
     );
-
-    const config = dataSetConfigs.find(config => config.dataSet.id === dataSet.id);
-    if (!config) {
-        console.error(`Approval configuration not found for dataSet ${dataSet.name} (${dataSet.id})`);
-        return;
-    }
 
     if (malDataApprovalItems.length === 0) {
         console.debug(`No data values to approve in ${dataSet.name} dataset.`);
@@ -116,7 +131,8 @@ async function buildMalApprovalItems(
     dataSetId: Id,
     orgUnitId: Id,
     dataSetConfigs: DataSetWithConfigPermissions[],
-    yearOption?: string
+    yearOption: Maybe<string>,
+    allowedOriginalDataElementIds: Maybe<Id[]>
 ): Promise<DataDiffItemIdentifier[]> {
     const periods = yearOption
         ? [yearOption]
@@ -131,7 +147,8 @@ async function buildMalApprovalItems(
             dataSetId,
             orgUnitId,
             period,
-            true // Include children
+            true, // Include children
+            allowedOriginalDataElementIds
         );
 
         return dataElementsWithValues.map(dataElementWithValues => ({

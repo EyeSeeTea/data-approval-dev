@@ -16,6 +16,9 @@ import {
     GetApprovalConfigurationsUseCase,
 } from "../domain/usecases/GetApprovalConfigurationsUseCase";
 import { writeFileSync } from "fs";
+import { DataElementGroupD2Repository } from "../data/reports/mal-data-approval/DataElementGroupD2Repository";
+import { UserReadableDataElementsService } from "../domain/reports/mal-data-approval/services/UserReadableDataElementsService";
+import { Maybe } from "../types/utils";
 
 const GLOBAL_OU = "WHO-HQ";
 const DEFAULT_START_YEAR = 2001;
@@ -49,7 +52,12 @@ export async function checkMalDataValuesDiff(options: DataDifferencesOptions): P
     const dataSetRepository = new DataSetD2Repository(api);
 
     const userRepository = new UserD2Repository(api);
+    const dataElementGroupRepository = new DataElementGroupD2Repository(api);
     const dataSetConfigurationRepository = new DataSetConfigurationD2Repository(api);
+    const userReadableDataElementsService = new UserReadableDataElementsService(
+        userRepository,
+        dataElementGroupRepository
+    );
 
     const getConfigUseCase = new GetApprovalConfigurationsUseCase({
         dataSetRepository,
@@ -61,6 +69,18 @@ export async function checkMalDataValuesDiff(options: DataDifferencesOptions): P
 
     const { dataSet, orgUnit } = await getMalWMRMetadata(api, dataSetCode, ouOption);
     console.debug(`dataSet original: ${dataSet.name} and orgUnit: ${orgUnit.name}`);
+    const dataSetConfig = dataSetConfigs.find(config => config.dataSet.id === dataSet.id);
+
+    if (!dataSetConfig) {
+        throw new Error(`Approval configuration not found for dataSet ${dataSet.name} (${dataSet.id})`);
+    }
+
+    const isCurrentUserSuperAdmin = await userReadableDataElementsService.isCurrentUserSuperAdmin();
+    const shouldValidateDataElementGroup =
+        dataSetConfig.configuration.validateDataElementGroup && !isCurrentUserSuperAdmin;
+    const allowedOriginalDataElementIds = shouldValidateDataElementGroup
+        ? await userReadableDataElementsService.getAllowedOriginalDataElementIds()
+        : undefined;
 
     const dataElementsWithValues = await buildDataDifferenceItems({
         dataValueRepository: dataValueRepository,
@@ -70,6 +90,7 @@ export async function checkMalDataValuesDiff(options: DataDifferencesOptions): P
         dataSetConfigs,
         yearOption: yearOption,
         dataSetApprovalName: dataSetApprovalName,
+        allowedOriginalDataElementIds,
     });
 
     if (dataElementsWithValues.length === 0) console.debug("No differences found");
@@ -92,6 +113,7 @@ async function buildDataDifferenceItems(options: {
     dataSetConfigs: DataSetWithConfigPermissions[];
     yearOption?: string;
     dataSetApprovalName: string;
+    allowedOriginalDataElementIds: Maybe<Id[]>;
 }): Promise<DataDiffItem[]> {
     const {
         dataValueRepository,
@@ -101,6 +123,7 @@ async function buildDataDifferenceItems(options: {
         yearOption,
         dataSetConfigs,
         dataSetApprovalName,
+        allowedOriginalDataElementIds,
     } = options;
     const dataSetAPVD = await dataSetRepository.getByNameOrCode(dataSetApprovalName);
 
@@ -121,7 +144,8 @@ async function buildDataDifferenceItems(options: {
             dataSetId,
             orgUnitId,
             period,
-            true // Include children
+            true, // Include children
+            allowedOriginalDataElementIds
         );
 
         return dataElementsWithValues

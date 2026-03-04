@@ -6,8 +6,7 @@ import { DataSetRepository } from "../common/repositories/DataSetRepository";
 import { DataValuesRepository } from "../common/repositories/DataValuesRepository";
 import { DataSetWithConfigPermissions } from "../usecases/GetApprovalConfigurationsUseCase";
 import { DataDiffItem } from "./mal-data-approval/entities/DataDiffItem";
-
-export const dataSetApprovalName = "MAL - WMR Form-APVD";
+import { Maybe } from "../../types/utils";
 
 export class WmrDiffReport {
     constructor(
@@ -16,8 +15,14 @@ export class WmrDiffReport {
         private dataSetConfigs: DataSetWithConfigPermissions[]
     ) {}
 
-    async getDiff(dataSetId: Id, orgUnitId: Id, period: string, children = false): Promise<DataDiffItem[]> {
-        const dataElements = await this.getDataElements(dataSetId);
+    async getDiff(
+        dataSetId: Id,
+        orgUnitId: Id,
+        period: string,
+        children = false,
+        allowedOriginalDataElementIds: Maybe<Id[]>
+    ): Promise<DataDiffItem[]> {
+        const dataElements = await this.getDataElements(dataSetId, allowedOriginalDataElementIds);
         const dataSet = await this.dataSetRepository.getById(dataSetId);
         const originalDataSet = dataSet[0];
         if (!originalDataSet) throw Error(`No data set found: ${dataSetId}`);
@@ -58,11 +63,20 @@ export class WmrDiffReport {
         return dataValues;
     }
 
-    private async getDataElements(dataSetId: Id): Promise<DataElementsWithCombination[]> {
+    private async getDataElements(
+        dataSetId: Id,
+        allowedDataElementIds: Maybe<Id[]>
+    ): Promise<DataElementsWithCombination[]> {
         const dataSets = await this.dataSetRepository.getById(dataSetId);
         const dataSet = _(dataSets).first();
         if (!dataSet) throw Error("No data set found");
+
+        const shouldFilterDataElements = allowedDataElementIds !== undefined;
+        const allowedDataElementIdsSet = new Set(allowedDataElementIds || []);
+
         return dataSet.dataElements.flatMap(dataElement => {
+            if (shouldFilterDataElements && !allowedDataElementIdsSet.has(dataElement.id)) return [];
+
             const combinations = dataElement.categoryCombo?.categoryOptionCombos || [];
 
             return combinations.map((combination): DataElementsWithCombination => {
