@@ -53,6 +53,10 @@ export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
         });
     }
 
+    updateValidateDataElementGroup(value: boolean): DataSetConfiguration {
+        return this._update({ validateDataElementGroup: value });
+    }
+
     updatePermissions(options: { action: DataSetConfigurationAction; usernames: string[]; userGroupCodes: string[] }) {
         const { action, usernames, userGroupCodes } = options;
         return this._update({

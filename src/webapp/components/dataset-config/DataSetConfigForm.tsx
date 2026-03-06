@@ -127,7 +127,7 @@ export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
                             onChange={updateOldDataSource}
                         />
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid item xs={4}>
                         <Checkbox
                             checked={configuration.submitAndComplete}
                             onChange={e => {
@@ -136,7 +136,7 @@ export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
                         />
                         {i18n.t("Submit also approves the dataSet")}
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid item xs={4}>
                         <Checkbox
                             checked={configuration.revokeAndIncomplete}
                             onChange={e => {
@@ -144,6 +144,15 @@ export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
                             }}
                         />
                         {i18n.t("Revoke also marks dataSet as incomplete")}
+                    </Grid>
+                    <Grid item xs={4}>
+                        <Checkbox
+                            checked={configuration.validateDataElementGroup}
+                            onChange={e => {
+                                onChange(configuration.updateValidateDataElementGroup(e.target.checked));
+                            }}
+                        />
+                        {i18n.t("Restrict modification display by Data Element Group sharing")}
                     </Grid>
                     <div className={classes.permissionContainer}>
                         {dataSetConfigurationActions.map(action => {
