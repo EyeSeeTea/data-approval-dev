@@ -9,7 +9,7 @@ function run(cmd: string): void {
 export async function build(): Promise<void> {
     const report = process.env.REACT_APP_REPORT_VARIANT;
     console.debug(`Report type: ${report}`);
-    console.debug("Building DHIS2 Approval Report");
+    console.debug("Building DHIS2 Data Approval Extended");
     run("yarn nhwa-build");
 }
 
