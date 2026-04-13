@@ -5,19 +5,34 @@ import { MalDataApprovalItem, MalDataApprovalItemIdentifier } from "../entities/
 import { DataDiffItemIdentifier } from "../entities/DataDiffItem";
 import { DataValueStats } from "../../../common/entities/DataValueStats";
 import { Log } from "../usecases/UpdateMalApprovalStatusUseCase";
+import { DataSetWithConfigPermissions } from "../../../usecases/GetApprovalConfigurationsUseCase";
 
 export interface MalDataApprovalRepository {
     get(options: MalDataApprovalOptions): Promise<PaginatedObjects<MalDataApprovalItem>>;
     save(filename: string, dataSets: MalDataApprovalItem[]): Promise<void>;
     complete(dataSets: MalDataApprovalItemIdentifier[]): Promise<boolean>;
-    approve(dataSets: MalDataApprovalItemIdentifier[], log?: Log): Promise<boolean>;
+    approve(options: {
+        dataSets: MalDataApprovalItemIdentifier[];
+        log?: Log;
+        dataSetConfig: DataSetWithConfigPermissions;
+    }): Promise<boolean>;
     duplicateDataSets(
         dataSets: MalDataApprovalItemIdentifier[],
-        dataElementsWithValues: DataDiffItemIdentifier[]
+        dataElementsWithValues: DataDiffItemIdentifier[],
+        dataSetConfig: DataSetWithConfigPermissions
     ): Promise<boolean>;
-    duplicateDataValues(dataSets: DataDiffItemIdentifier[]): Promise<boolean>;
-    replicateDataValuesInApvdDataSet(dataSets: DataDiffItemIdentifier[]): Promise<DataValueStats[]>;
-    duplicateDataValuesAndRevoke(dataSets: DataDiffItemIdentifier[]): Promise<boolean>;
+    duplicateDataValues(
+        dataSets: DataDiffItemIdentifier[],
+        dataSetConfig: DataSetWithConfigPermissions
+    ): Promise<boolean>;
+    replicateDataValuesInApvdDataSet(options: {
+        originalDataValues: DataDiffItemIdentifier[];
+        dataSetConfig: DataSetWithConfigPermissions;
+    }): Promise<DataValueStats[]>;
+    duplicateDataValuesAndRevoke(
+        dataSets: DataDiffItemIdentifier[],
+        dataSetConfig: DataSetWithConfigPermissions
+    ): Promise<boolean>;
     incomplete(dataSets: MalDataApprovalItemIdentifier[]): Promise<boolean>;
     unapprove(dataSets: MalDataApprovalItemIdentifier[]): Promise<boolean>;
     getColumns(namespace: string): Promise<string[]>;
@@ -38,4 +53,5 @@ export interface MalDataApprovalOptions {
     completionStatus?: boolean;
     isApproved?: boolean;
     modificationCount?: string | undefined;
+    dataSetsConfig: DataSetWithConfigPermissions[];
 }

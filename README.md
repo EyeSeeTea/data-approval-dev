@@ -1,20 +1,6 @@
 ## Introduction
 
-_d2-reports_ than can be used as an standalone DHIS2 webapp or an standard HTML report (App: Reports). DHIS2 versions tested: 2.34.
-
-## Reports
-
-### NHWA Comments
-
-This report shows data values for data sets `NHWA Module ...`. There are two kinds of data values displayed in the report table:
-
-1. Data values that have comments.
-2. Data values related pairs (value/comment), which are rendered as a single row. The pairing criteria is:
-
-    - Comment data element `NHWA_Comment of Abc`.
-    - Value data element: `NHWA_Abc`.
-
-The API endpoint `/dataValueSets` does not provide all the features we need, so we use a custom SQL View instead.
+Data Approval App
 
 ## Initial setup
 
@@ -30,18 +16,65 @@ Start the development server at `http://localhost:8082` using `https://play.dhis
 $ PORT=8082 REACT_APP_DHIS2_BASE_URL="https://play.dhis2.org/2.34" yarn start
 ```
 
-## Deploy
+## Generate sql view for a dataSet
 
-Create an standard report:
+Script to generate necessary sqlViews for dataSets and create a DataSetConfiguration.
 
-```
-$ yarn build-report # Creates dist/index.html
-$ yarn build-<key>-metadata -u 'user:pass' --url http://dhis2-server.org # Creates dist/metadata.json (key is a particular report group, e.g. nhwa)
-$ yarn post-<key>-metadata -u 'user:pass' --url http://dhis2-server.org # Posts dist/metadata.json (key is a particular report group, e.g. nhwa)
-```
-
-Create an standalone DHIS2 webapp app:
+If you want to persist the sqlViews and configuration to DHIS2 please configure the following variables in your `.env` file:
 
 ```
-$ yarn build-webapp # Creates dist/d2-reports.zip
+REACT_APP_DHIS2_BASE_URL=http://localhost:8080
+REACT_APP_DHIS2_AUTH='admin:district'
 ```
+
+Run the script:
+
+```shell
+yarn run generate-sqlviews \
+--dataSet MY_DS_CODE \
+--dataSet-destination MY_DS_APPROVAL_CODE \
+--dataElement-submission DATAELEMENT_CODE_SUBMISSION-APVD \
+--dataElement-approval DATAELEMENT_CODE_APPROVAL_DATE-APVD \
+--persist dhis
+```
+
+Parameters:
+
+-   `--dataSet` (`-ds`): dataSet code of the original dataSet
+-   `--dataSet-destination` (`-ds-dest`): dataSet code of the destination/approval dataSet (required)
+-   `--dataElement-submission` (`-de-sub`): dataElement code where the submission date is going to be saved (this must be in the APPROVAL dataSet)
+-   `--dataElement-approval` (`-de-apprv`): dataElement code where the approval date is going to be saved (this must be in the APPROVAL dataSet)
+-   `--persist`: save sqlViews to `dhis` or `disk`
+
+When `--persist dhis` is used, the script also creates a DataSetConfiguration in the DHIS2 DataStore with `submitAndComplete: true`, `revokeAndIncomplete: true`, and empty permissions (only admin users have access to this dataSet. You can edit this in the settings page of the application).
+
+## Generate DataSet Approval metadata
+
+Script to clone an existing DataSet and its DataElements with the `-APVD` suffix, generating a new approval DataSet and metadata file.
+
+Make sure the following variables are configured in your `.env` file:
+
+```
+REACT_APP_DHIS2_BASE_URL=http://localhost:8080
+REACT_APP_DHIS2_AUTH='admin:district'
+```
+
+Run the script:
+
+```shell
+yarn run generate-dataset-approval --dataSet MY_DS_CODE \
+--dataElement-submission "MY_DS_CODE-Submission date module1-APVD" \
+--dataElement-approval "MY_DS_CODE-Approval date module1-APVD" \
+--persist
+```
+
+Parameters:
+
+-   `--dataSet` (`-ds`): dataSet code of the original dataSet (required)
+-   `--post`: commit metadata to DHIS2 (default: validate only)
+
+Notes:
+
+-   Writes a metadata JSON file named `<dataSetCode>_<timestamp>.json` in the current directory.
+-   Show dataElements without code and saves them to `warning_<dataSetCode>_<timestamp>.json`.
+-   On validation/import errors, saves details to `errors_<dataSetCode>_<timestamp>.json`.

@@ -7,6 +7,7 @@ import { useAppContext } from "../../../../contexts/app-context";
 import { useDataApprovalMonitoring } from "./useDataApprovalMonitoring";
 import { useBooleanState } from "../../../../utils/use-boolean";
 import { useLoading } from "@eyeseetea/d2-ui-components";
+import { DataSetWithConfigPermissions } from "../../../../../domain/usecases/GetApprovalConfigurationsUseCase";
 
 type GlobalMessage = {
     type: "success" | "error";
@@ -39,7 +40,10 @@ type DataApprovalActionsState = {
     };
 };
 
-export function useDataApprovalActions(): DataApprovalActionsState {
+export function useDataApprovalActions(props: {
+    dataSetsConfig: DataSetWithConfigPermissions[];
+}): DataApprovalActionsState {
+    const { dataSetsConfig } = props;
     const { compositionRoot } = useAppContext();
     const [reloadKey, reload] = useReload();
     const loading = useLoading();
@@ -68,13 +72,17 @@ export function useDataApprovalActions(): DataApprovalActionsState {
             if (items.length === 0) return;
 
             loading.show(true, "Approving dataset");
-            const result = await compositionRoot.malDataApproval.updateStatus(items, "duplicate");
+            const result = await compositionRoot.malDataApproval.updateStatus({
+                items,
+                action: "duplicate",
+                dataSetsConfig,
+            });
             if (!result) setGlobalMessage({ type: "error", message: i18n.t("Error when trying to approve data set") });
 
             reload();
             loading.hide();
         },
-        [compositionRoot.malDataApproval, reload, loading]
+        [compositionRoot.malDataApproval, reload, loading, dataSetsConfig]
     );
 
     const updateCompletionStatus = useCallback(
@@ -82,14 +90,18 @@ export function useDataApprovalActions(): DataApprovalActionsState {
             const items = _.compact(selectedIds.map(item => parseDataDuplicationItemId(item)));
             if (items.length === 0) return;
             loading.show(true, loadingText);
-            const result = await compositionRoot.malDataApproval.updateStatus(items, status);
+            const result = await compositionRoot.malDataApproval.updateStatus({
+                items,
+                action: status,
+                dataSetsConfig,
+            });
             if (!result)
                 setGlobalMessage({ type: "error", message: i18n.t(`Error when trying to ${status} data set`) });
 
             reload();
             loading.hide();
         },
-        [compositionRoot.malDataApproval, reload, loading]
+        [compositionRoot.malDataApproval, reload, loading, dataSetsConfig]
     );
 
     const completeAction = useCallback(
@@ -137,13 +149,17 @@ export function useDataApprovalActions(): DataApprovalActionsState {
             const items = _.compact(selectedIds.map(item => parseDataDuplicationItemId(item)));
             if (items.length === 0) return;
             loading.show(true, i18n.t("Revoking dataset"));
-            const result = await compositionRoot.malDataApproval.updateStatus(items, "revoke");
+            const result = await compositionRoot.malDataApproval.updateStatus({
+                items,
+                action: "revoke",
+                dataSetsConfig,
+            });
             if (!result) setGlobalMessage({ type: "error", message: i18n.t("Error when trying to unsubmit data set") });
 
             reload();
             loading.hide();
         },
-        [compositionRoot.malDataApproval, reload, loading]
+        [compositionRoot.malDataApproval, reload, loading, dataSetsConfig]
     );
 
     const submitAction = useCallback(
@@ -151,13 +167,18 @@ export function useDataApprovalActions(): DataApprovalActionsState {
             const items = _.compact(selectedIds.map(item => parseDataDuplicationItemId(item)));
             if (items.length === 0) return;
             loading.show(true, "Loading...");
-            const result = await compositionRoot.malDataApproval.updateStatus(items, "approve", log);
+            const result = await compositionRoot.malDataApproval.updateStatus({
+                items,
+                action: "approve",
+                log,
+                dataSetsConfig,
+            });
             if (!result) setGlobalMessage({ type: "error", message: i18n.t("Error when trying to submit data set") });
 
             reload();
             loading.hide();
         },
-        [compositionRoot.malDataApproval, reload, loading, log]
+        [compositionRoot.malDataApproval, reload, loading, log, dataSetsConfig]
     );
 
     const closeDataDifferencesDialog = useCallback(() => {

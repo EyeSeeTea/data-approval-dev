@@ -1,4 +1,4 @@
-import { Struct } from "./Struct";
+import { Struct } from "../../generic/Struct";
 
 type DataSetStatusAttrs = {
     isSubmitted: boolean;

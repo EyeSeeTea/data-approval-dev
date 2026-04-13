@@ -1,9 +1,10 @@
 import _ from "lodash";
-import { AppSettings, isValidApprovalDataElement } from "../common/entities/AppSettings";
+import { isValidApprovalDataElement } from "../common/entities/AppSettings";
 import { Id } from "../common/entities/Base";
 import { DataValue } from "../common/entities/DataValue";
 import { DataSetRepository } from "../common/repositories/DataSetRepository";
 import { DataValuesRepository } from "../common/repositories/DataValuesRepository";
+import { DataSetWithConfigPermissions } from "../usecases/GetApprovalConfigurationsUseCase";
 import { DataDiffItem } from "./mal-data-approval/entities/DataDiffItem";
 
 export const dataSetApprovalName = "MAL - WMR Form-APVD";
@@ -12,7 +13,7 @@ export class WmrDiffReport {
     constructor(
         private dataValueRepository: DataValuesRepository,
         private dataSetRepository: DataSetRepository,
-        private settings: AppSettings
+        private dataSetConfigs: DataSetWithConfigPermissions[]
     ) {}
 
     async getDiff(dataSetId: Id, orgUnitId: Id, period: string, children = false): Promise<DataDiffItem[]> {
@@ -20,10 +21,12 @@ export class WmrDiffReport {
         const dataSet = await this.dataSetRepository.getById(dataSetId);
         const originalDataSet = dataSet[0];
         if (!originalDataSet) throw Error(`No data set found: ${dataSetId}`);
-        const settings = this.settings.dataSets[originalDataSet.code];
+        const settings = this.dataSetConfigs.find(config => config.dataSet.id === originalDataSet.id);
         if (!settings) throw Error(`No settings found for data set: ${originalDataSet.code}`);
 
-        const dataSetApproval = await this.dataSetRepository.getByNameOrCode(settings.approvalDataSetCode);
+        const dataSetApproval = await this.dataSetRepository.getByNameOrCode(
+            settings.configuration.dataSetDestinationCode
+        );
         const approvalDataValues = await this.getDataValues(dataSetApproval.id, orgUnitId, period, children);
         const malDataValues = await this.getDataValues(dataSetId, orgUnitId, period, children);
 

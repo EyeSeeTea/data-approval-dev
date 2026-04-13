@@ -1,8 +1,10 @@
 import { Id } from "../../domain/common/entities/Base";
-import { DataSet } from "../../domain/common/entities/DataSet";
+import { DataSet, getAllowedPeriodType } from "../../domain/common/entities/DataSet";
 import { OrgUnit } from "../../domain/common/entities/OrgUnit";
 import { DataSetRepository } from "../../domain/common/repositories/DataSetRepository";
-import { D2Api } from "../../types/d2-api";
+import { FutureData } from "../../domain/generic/Future";
+import { D2Api, MetadataPick } from "../../types/d2-api";
+import { apiToFuture } from "../api-futures";
 
 export class DataSetD2Repository implements DataSetRepository {
     constructor(private api: D2Api) {}
@@ -10,10 +12,7 @@ export class DataSetD2Repository implements DataSetRepository {
     async getByNameOrCode(nameOrCode: string): Promise<DataSet> {
         return this.api.metadata
             .get({
-                dataSets: {
-                    fields: { id: true, code: true, name: true, organisationUnits: { id: true, name: true } },
-                    filter: { identifiable: { eq: nameOrCode } },
-                },
+                dataSets: { fields: dataSetListFields, filter: { identifiable: { eq: nameOrCode } } },
             })
             .getData()
             .then(response => {
@@ -25,6 +24,7 @@ export class DataSetD2Repository implements DataSetRepository {
                     code: dataSet.code,
                     id: dataSet.id,
                     name: dataSet.name,
+                    periodType: getAllowedPeriodType(dataSet.periodType),
                     organisationUnits: dataSet.organisationUnits.map(
                         (ou): OrgUnit => ({
                             id: ou.id,
@@ -40,12 +40,7 @@ export class DataSetD2Repository implements DataSetRepository {
 
     async getById(id: Id): Promise<DataSet[]> {
         return this.api.metadata
-            .get({
-                dataSets: {
-                    fields: dataSetFields,
-                    filter: { id: { eq: id } },
-                },
-            })
+            .get({ dataSets: { fields: dataSetFields, filter: { id: { eq: id } } } })
             .getData()
             .then(response => {
                 return response.dataSets.map(d2DataSet => {
@@ -53,6 +48,7 @@ export class DataSetD2Repository implements DataSetRepository {
                         id: d2DataSet.id,
                         name: d2DataSet.name,
                         code: d2DataSet.code,
+                        periodType: getAllowedPeriodType(d2DataSet.periodType),
                         dataElements: d2DataSet.dataSetElements.map(d2DataElement => {
                             return {
                                 id: d2DataElement.dataElement.id,
@@ -75,12 +71,42 @@ export class DataSetD2Repository implements DataSetRepository {
                 });
             });
     }
+
+    getByCodes(codes: string[]): FutureData<DataSet[]> {
+        return apiToFuture(
+            this.api.metadata.get({ dataSets: { fields: dataSetListFields, filter: { code: { in: codes } } } })
+        ).map(response => {
+            return this.buildDataSet(response.dataSets);
+        });
+    }
+
+    private buildDataSet(d2DataSets: D2DataSetListField[]): DataSet[] {
+        return d2DataSets.map((dataSet): DataSet => {
+            return {
+                dataElements: [],
+                code: dataSet.code,
+                id: dataSet.id,
+                name: dataSet.name,
+                periodType: getAllowedPeriodType(dataSet.periodType),
+                organisationUnits: dataSet.organisationUnits.map(
+                    (ou): OrgUnit => ({
+                        id: ou.id,
+                        name: ou.name,
+                        path: "",
+                        children: [],
+                        level: 0,
+                    })
+                ),
+            };
+        });
+    }
 }
 
 const dataSetFields = {
     id: true,
     name: true,
     code: true,
+    periodType: true,
     dataSetElements: {
         dataElement: {
             id: true,
@@ -105,3 +131,15 @@ const dataSetFields = {
         level: true,
     },
 };
+
+const dataSetListFields = {
+    id: true,
+    code: true,
+    name: true,
+    organisationUnits: { id: true, name: true },
+    periodType: true,
+} as const;
+
+type D2DataSetListField = MetadataPick<{
+    dataSets: { fields: typeof dataSetListFields };
+}>["dataSets"][number];
