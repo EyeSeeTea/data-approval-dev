@@ -57,7 +57,7 @@ async function main() {
                 `Invalid persist option: '${args.persist}'. Valid options are: ${persistOptions.join(", ")}`
             );
 
-        const api = new D2Api({ baseUrl, auth: { username, password } });
+        const api = new D2Api({ agent: {}, baseUrl, auth: { username, password } });
 
         await generateSqlViews({
             api,

@@ -45,7 +45,7 @@ async function main() {
         const [username, password] = authString.split(":", 2);
         if (!username || !password) throw new Error("Invalid DHIS2 authentication");
 
-        const api = new D2Api({ baseUrl, auth: { username, password } });
+        const api = new D2Api({ agent: {}, baseUrl, auth: { username, password } });
 
         await generateDataSetApproval({
             api,
