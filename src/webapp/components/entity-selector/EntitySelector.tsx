@@ -18,16 +18,18 @@ type EntitySelectorProps = {
     type: MetadataEntityType;
     onChange: (entity: TableEntity) => void;
     onlyWithCode?: boolean;
+    disabled?: boolean;
 };
 
 export const EntitySelector = (props: EntitySelectorProps) => {
-    const { label, onChange, value, type, onlyWithCode } = props;
+    const { label, onChange, value, type, onlyWithCode, disabled } = props;
     const [showModal, setShowModal] = React.useState(false);
     const [selectedEntity, setSelectedEntity] = React.useState<TableEntity>();
 
     const openTable = React.useCallback(() => {
+        if (disabled) return;
         setShowModal(true);
-    }, []);
+    }, [disabled]);
 
     const selectEntity = React.useCallback(
         (entity: TableEntity) => {
@@ -46,6 +48,7 @@ export const EntitySelector = (props: EntitySelectorProps) => {
                 label={label}
                 value={selectedEntity ? selectedEntity.code ?? selectedEntity.name : value}
                 inputProps={{ readOnly: true }}
+                disabled={disabled}
                 fullWidth
             />
             <ConfirmationDialog

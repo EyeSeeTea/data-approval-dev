@@ -35,6 +35,15 @@ export interface MalDataApprovalRepository {
     ): Promise<boolean>;
     incomplete(dataSets: MalDataApprovalItemIdentifier[]): Promise<boolean>;
     unapprove(dataSets: MalDataApprovalItemIdentifier[]): Promise<boolean>;
+    setIntermediateApproval(options: {
+        dataSets: MalDataApprovalItemIdentifier[];
+        dataSetConfig: DataSetWithConfigPermissions;
+        approved: boolean;
+    }): Promise<boolean>;
+    getIntermediateApproval(options: {
+        item: MalDataApprovalItemIdentifier;
+        dataSetConfig: DataSetWithConfigPermissions;
+    }): Promise<boolean>;
     getColumns(namespace: string): Promise<string[]>;
     saveColumns(namespace: string, columns: string[]): Promise<void>;
     getSortOrder(): Promise<string[]>;

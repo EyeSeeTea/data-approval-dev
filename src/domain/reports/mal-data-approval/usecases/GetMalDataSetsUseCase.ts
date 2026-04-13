@@ -25,6 +25,12 @@ export class GetMalDataSetsUseCase implements UseCase {
             const { dataSetIds: _, ...rest } = options;
             const result = await this.malDataRepository.get({ ...rest, dataSetId: dataSetId });
 
+            const dataSetConfig = options.dataSetsConfig.find(ds => ds.dataSet.id === dataSetId);
+            const intermediateEnabled = Boolean(
+                dataSetConfig?.configuration.intermediateApprovalRequired &&
+                    dataSetConfig?.configuration.intermediateApproveCode
+            );
+
             const response = await promiseMap(result.objects, async item => {
                 const dataElementsWithValues = await new WmrDiffReport(
                     this.dataValueRepository,
@@ -32,11 +38,26 @@ export class GetMalDataSetsUseCase implements UseCase {
                     options.dataSetsConfig
                 ).getDiff(item.dataSetUid, item.orgUnitUid, item.period);
 
+                const intermediateApproved =
+                    intermediateEnabled && dataSetConfig
+                        ? await this.malDataRepository.getIntermediateApproval({
+                              item: {
+                                  dataSet: item.dataSetUid,
+                                  orgUnit: item.orgUnitUid,
+                                  orgUnitCode: item.orgUnitCode,
+                                  period: item.period,
+                                  workflow: item.approvalWorkflowUid,
+                              },
+                              dataSetConfig,
+                          })
+                        : undefined;
+
                 return {
                     ...item,
                     // TODO: remove all monitoring related code
                     monitoring: false,
                     modificationCount: dataElementsWithValues.length > 0 ? String(dataElementsWithValues.length) : "",
+                    intermediateApproved: intermediateApproved,
                 };
             });
 

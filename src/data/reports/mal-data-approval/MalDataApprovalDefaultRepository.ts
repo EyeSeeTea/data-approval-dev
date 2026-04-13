@@ -114,7 +114,9 @@ type SqlField =
     | "diff"
     | "monitoring";
 
-const fieldMapping: Record<keyof MalDataApprovalItem, SqlField> = {
+// Not every item field is backed by a SQL view column — "intermediateApproved"
+// is fetched via a separate /dataValueSets call and has no SQL mapping.
+const fieldMapping: Partial<Record<keyof MalDataApprovalItem, SqlField>> = {
     dataSetUid: "datasetuid",
     dataSet: "dataset",
     orgUnitUid: "orgunit",
@@ -176,7 +178,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
             dataSets: dataSetId,
             completed: completionStatus === undefined ? "-" : completionStatus ? "true" : "-",
             approved: approvalStatus === undefined ? "-" : approvalStatus.toString(),
-            orderByColumn: fieldMapping[sorting.field],
+            orderByColumn: fieldMapping[sorting.field] ?? "period",
             orderByDirection: sorting.direction,
         };
 
@@ -909,6 +911,71 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
 
             return _.every(response, item => item === "");
         } catch (error: any) {
+            return false;
+        }
+    }
+
+    async setIntermediateApproval(options: {
+        dataSets: MalDataApprovalItemIdentifier[];
+        dataSetConfig: DataSetWithConfigPermissions;
+        approved: boolean;
+    }): Promise<boolean> {
+        const { dataSets, dataSetConfig, approved } = options;
+        const intermediateApproveCode = dataSetConfig.configuration.intermediateApproveCode;
+        if (!intermediateApproveCode) return false;
+
+        try {
+            const DEFAULT_COC = (await this.getDefaultCombination()).id;
+            const dataElement = await getMetadataByIdentifiableToken({
+                api: this.api,
+                metadataType: "dataElements",
+                token: intermediateApproveCode,
+            });
+
+            const dataValues = dataSets.map(ds => ({
+                dataSet: ds.dataSet,
+                period: ds.period,
+                orgUnit: ds.orgUnit,
+                dataElement: dataElement.id,
+                categoryOptionCombo: DEFAULT_COC,
+                value: approved ? "true" : "false",
+            }));
+
+            const response = await this.api.post<any>("/dataValueSets.json", {}, { dataValues }).getData();
+            return response.response?.status === "SUCCESS" || response.status === "SUCCESS";
+        } catch (error: any) {
+            console.debug(error);
+            return false;
+        }
+    }
+
+    async getIntermediateApproval(options: {
+        item: MalDataApprovalItemIdentifier;
+        dataSetConfig: DataSetWithConfigPermissions;
+    }): Promise<boolean> {
+        const { item, dataSetConfig } = options;
+        const intermediateApproveCode = dataSetConfig.configuration.intermediateApproveCode;
+        if (!intermediateApproveCode) return false;
+
+        try {
+            const dataElement = await getMetadataByIdentifiableToken({
+                api: this.api,
+                metadataType: "dataElements",
+                token: intermediateApproveCode,
+            });
+
+            const response = await this.api
+                .get<{ dataValues?: { dataElement: string; value: string }[] }>("/dataValueSets", {
+                    dataSet: item.dataSet,
+                    period: item.period,
+                    orgUnit: item.orgUnit,
+                })
+                .getData();
+
+            const matching = response.dataValues?.find(dv => dv.dataElement === dataElement.id);
+            return matching?.value === "true";
+        } catch (error: any) {
+            console.debug(error);
             return false;
         }
     }

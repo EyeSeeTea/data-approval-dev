@@ -1,4 +1,4 @@
-import { DataSetConfiguration } from "../domain/entities/DataSetConfiguration";
+import { DataSetConfiguration, DataSetConfigurationAttrs } from "../domain/entities/DataSetConfiguration";
 import { Future, FutureData } from "../domain/generic/Future";
 import { DataSetConfigurationRepository } from "../domain/repositories/DataSetConfigurationRepository";
 import { D2Api } from "../types/d2-api";
@@ -16,9 +16,9 @@ export class DataSetConfigurationD2Repository implements DataSetConfigurationRep
 
     getByCode(code: string): FutureData<DataSetConfiguration> {
         const dataStore = this.api.dataStore(this.namespace);
-        return apiToFuture(dataStore.get<DataSetConfiguration>(`DS_${code}`)).flatMap(data => {
+        return apiToFuture(dataStore.get<Partial<DataSetConfigurationAttrs>>(`DS_${code}`)).flatMap(data => {
             return data
-                ? Future.success(DataSetConfiguration.create(data))
+                ? Future.success(DataSetConfiguration.withDefaults(data))
                 : Future.error(new Error(`DataSetConfiguration with code ${code} not found`));
         });
     }
@@ -35,7 +35,7 @@ export class DataSetConfigurationD2Repository implements DataSetConfigurationRep
                 entry.key.startsWith(DataSetConfiguration.CODE_PREFIX)
             );
             return onlyDataSetConfigs.map(entry => {
-                return DataSetConfiguration.create(entry.value);
+                return DataSetConfiguration.withDefaults(entry.value);
             });
         });
     }
@@ -55,6 +55,6 @@ type D2DataStoreFields = {
     entries: D2Entries[];
 };
 
-type D2Entries = { key: string; value: DataSetConfiguration };
+type D2Entries = { key: string; value: Partial<DataSetConfigurationAttrs> };
 
 const dataStoreFields = { fields: "." };

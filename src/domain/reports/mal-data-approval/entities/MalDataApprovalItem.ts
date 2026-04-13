@@ -18,6 +18,9 @@ export interface MalDataApprovalItem {
     lastDateOfApproval: string | undefined;
     modificationCount: string | undefined;
     monitoring: boolean;
+    // Raw stored value of the "intermediate approve" data element for this row, or
+    // undefined when the feature isn't configured / hasn't been fetched.
+    intermediateApproved?: boolean;
 }
 
 export interface MalDataApprovalItemIdentifier {
