@@ -633,7 +633,7 @@ msgstr ""
 
 msgid ""
 "The list could not be loaded because analytics jobs are currently running. "
-"Please try again in a few seconds by clicking 'Apply Filters'."
+"Please try again in a few minutes by clicking 'Apply Filters'."
 msgstr ""
 
 msgid "Check differences"
