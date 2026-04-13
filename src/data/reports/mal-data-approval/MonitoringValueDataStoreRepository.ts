@@ -1,4 +1,4 @@
-import { D2Api } from "@eyeseetea/d2-api/2.34";
+import { D2Api } from "../../../types/d2-api";
 import { MonitoringValueRepository } from "../../../domain/reports/mal-data-approval/repositories/MonitoringValueRepository";
 import { StorageClient } from "../../common/clients/storage/StorageClient";
 import { Instance } from "../../common/entities/Instance";

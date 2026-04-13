@@ -47,6 +47,8 @@ import { GetMetadataEntitiesUseCase } from "./domain/usecases/GetMetadataEntitie
 import { SaveDataSetConfigurationUseCase } from "./domain/usecases/SaveDataSetConfigurationUseCase";
 import { GetApprovalConfigurationsUseCase } from "./domain/usecases/GetApprovalConfigurationsUseCase";
 import { RemoveDataSetConfigurationUseCase } from "./domain/usecases/RemoveDataSetConfigurationUseCase";
+import { DataElementGroupD2Repository } from "./data/reports/mal-data-approval/DataElementGroupD2Repository";
+import { UserReadableDataElementsService } from "./domain/reports/mal-data-approval/services/UserReadableDataElementsService";
 
 export function getCompositionRoot(api: D2Api) {
     const configRepository = new Dhis2ConfigRepository(api);
@@ -63,6 +65,11 @@ export function getCompositionRoot(api: D2Api) {
     const dataSetConfigurationRepository = new DataSetConfigurationD2Repository(api);
     const userSharingRepository = new UserSharingD2Repository(api);
     const metadataEntityRepository = new MetadataEntityD2Repository(api);
+    const dataElementGroupRepository = new DataElementGroupD2Repository(api);
+    const userReadableDataElementsService = new UserReadableDataElementsService(
+        userRepository,
+        dataElementGroupRepository
+    );
 
     return {
         metadata: {
@@ -93,8 +100,17 @@ export function getCompositionRoot(api: D2Api) {
             }),
         },
         malDataApproval: getExecute({
-            get: new GetMalDataSetsUseCase(dataDuplicationRepository, dataValuesRepository, dataSetRepository),
-            getDiff: new GetMalDataDiffUseCase(dataValuesRepository, dataSetRepository),
+            get: new GetMalDataSetsUseCase(
+                dataDuplicationRepository,
+                dataValuesRepository,
+                dataSetRepository,
+                userReadableDataElementsService
+            ),
+            getDiff: new GetMalDataDiffUseCase(
+                dataValuesRepository,
+                dataSetRepository,
+                userReadableDataElementsService
+            ),
             save: new SaveMalDataSetsUseCase(dataDuplicationRepository),
             getColumns: new GetMalDataApprovalColumnsUseCase(dataDuplicationRepository),
             saveColumns: new SaveMalDataApprovalColumnsUseCase(dataDuplicationRepository),
@@ -103,7 +119,8 @@ export function getCompositionRoot(api: D2Api) {
             updateStatus: new UpdateMalApprovalStatusUseCase(
                 dataDuplicationRepository,
                 dataValuesRepository,
-                dataSetRepository
+                dataSetRepository,
+                userReadableDataElementsService
             ),
             duplicateValue: new DuplicateDataValuesUseCase(dataDuplicationRepository, dataSetStatusRepository),
             getSortOrder: new GetSortOrderUseCase(dataDuplicationRepository),

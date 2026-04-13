@@ -1,4 +1,4 @@
-import { D2Api } from "@eyeseetea/d2-api/2.34";
+import { D2Api } from "../../../types/d2-api";
 import { Future, FutureData } from "../../../domain/generic/Future";
 import {
     UserGroup,

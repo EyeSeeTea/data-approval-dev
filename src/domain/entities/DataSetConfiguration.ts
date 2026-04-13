@@ -26,6 +26,7 @@ export type DataSetConfigurationAttrs = {
     oldDataSourceId: Id;
     submitAndComplete: boolean;
     revokeAndIncomplete: boolean;
+    validateDataElementGroup: boolean;
 };
 
 export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
@@ -48,7 +49,12 @@ export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
             oldDataSourceId: "",
             submitAndComplete: false,
             revokeAndIncomplete: false,
+            validateDataElementGroup: false,
         });
+    }
+
+    updateValidateDataElementGroup(value: boolean): DataSetConfiguration {
+        return this._update({ validateDataElementGroup: value });
     }
 
     updatePermissions(options: { action: DataSetConfigurationAction; usernames: string[]; userGroupCodes: string[] }) {
