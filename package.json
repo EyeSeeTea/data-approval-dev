@@ -55,10 +55,8 @@
         "start": "react-scripts start",
         "craco-start": "craco start",
         "prebuild": "yarn localize && yarn test",
-        "build-folder": "rm -rf build/ && d2-manifest package.json manifest.webapp && react-scripts build && yarn run manifest && cp -r i18n icon.png build",
-        "build-default": "REACT_APP_DHIS2_BASE_URL='' REACT_APP_DHIS2_AUTH='' yarn build-folder && rm -f $npm_package_name.zip && cd build && rm -f manifest_mal.json mal-favicon.ico && zip --quiet -r ../$npm_package_name.zip *",
-        "nhwa-build-folder": "rm -rf build/ && d2-manifest package.json manifest.webapp && react-scripts build && yarn run manifest && cp -r i18n mal-icon.png build",
-        "build": "REACT_APP_DHIS2_BASE_URL='' REACT_APP_DHIS2_AUTH='' yarn nhwa-build-folder && rm -f $npm_package_name.zip && cd build && rm -f manifest.json mal-favicon.ico && zip --quiet -r ../$npm_package_name.zip *",
+        "build-folder": "rm -rf build/ && d2-manifest package.json manifest.webapp && react-scripts build && yarn run manifest && cp -r i18n app-icon.png build",
+        "build": "REACT_APP_DHIS2_BASE_URL='' REACT_APP_DHIS2_AUTH='' yarn build-folder && rm -f $npm_package_name.zip && cd build && rm -f manifest.json && zip --quiet -r ../$npm_package_name.zip *",
         "test": "jest --passWithNoTests",
         "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
         "eject": "react-scripts eject",
@@ -131,7 +129,7 @@
         "name": "Data Approval Extended",
         "description": "Data Approval Extended",
         "icons": {
-            "48": "mal-icon.png"
+            "48": "app-icon.png"
         },
         "developer": {
             "url": "https://www.eyeseetea.com/",
