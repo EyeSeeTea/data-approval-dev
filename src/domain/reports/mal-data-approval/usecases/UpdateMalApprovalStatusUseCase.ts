@@ -53,14 +53,33 @@ export class UpdateMalApprovalStatusUseCase {
                 }
                 case "revoke": {
                     const revokeResult = await this.approvalRepository.unapprove(itemsToUpdate);
+                    const resetIntermediateResult = config.configuration.intermediateApprovalRequired
+                        ? await this.approvalRepository.setIntermediateApproval({
+                              dataSets: itemsToUpdate,
+                              dataSetConfig: config,
+                              approved: false,
+                          })
+                        : true;
                     if (config.configuration.revokeAndIncomplete) {
                         const incompleteResult = await this.approvalRepository.incomplete(itemsToUpdate);
-                        return revokeResult && incompleteResult;
+                        return revokeResult && resetIntermediateResult && incompleteResult;
                     }
-                    return revokeResult;
+                    return revokeResult && resetIntermediateResult;
                 }
                 case "incomplete":
                     return this.approvalRepository.incomplete(itemsToUpdate);
+                case "intermediateApprove":
+                    return this.approvalRepository.setIntermediateApproval({
+                        dataSets: itemsToUpdate,
+                        dataSetConfig: config,
+                        approved: true,
+                    });
+                case "intermediateUnapprove":
+                    return this.approvalRepository.setIntermediateApproval({
+                        dataSets: itemsToUpdate,
+                        dataSetConfig: config,
+                        approved: false,
+                    });
                 default:
                     return false;
             }
@@ -113,6 +132,8 @@ type UpdateAction =
     | "unapprove"
     | "activate"
     | "deactivate"
-    | "revoke";
+    | "revoke"
+    | "intermediateApprove"
+    | "intermediateUnapprove";
 
 export type Log = (msg: string) => void;

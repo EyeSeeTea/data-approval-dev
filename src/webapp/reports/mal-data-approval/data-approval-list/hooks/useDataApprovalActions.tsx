@@ -37,6 +37,8 @@ type DataApprovalActionsState = {
         incompleteAction: (selectedIds: string[]) => Promise<void>;
         revokeAction: (selectedIds: string[]) => Promise<void>;
         submitAction: (selectedIds: string[]) => Promise<void>;
+        intermediateApproveAction: (selectedIds: string[]) => Promise<void>;
+        intermediateUnapproveAction: (selectedIds: string[]) => Promise<void>;
     };
 };
 
@@ -181,6 +183,50 @@ export function useDataApprovalActions(props: {
         [compositionRoot.malDataApproval, reload, loading, log, dataSetsConfig]
     );
 
+    const intermediateApproveAction = useCallback(
+        async (selectedIds: string[]) => {
+            const items = _.compact(selectedIds.map(item => parseDataDuplicationItemId(item)));
+            if (items.length === 0) return;
+            loading.show(true, i18n.t("Applying intermediate approval..."));
+            const result = await compositionRoot.malDataApproval.updateStatus({
+                items,
+                action: "intermediateApprove",
+                dataSetsConfig,
+            });
+            if (!result)
+                setGlobalMessage({
+                    type: "error",
+                    message: i18n.t("Error when trying to apply intermediate approval"),
+                });
+
+            reload();
+            loading.hide();
+        },
+        [compositionRoot.malDataApproval, reload, loading, dataSetsConfig]
+    );
+
+    const intermediateUnapproveAction = useCallback(
+        async (selectedIds: string[]) => {
+            const items = _.compact(selectedIds.map(item => parseDataDuplicationItemId(item)));
+            if (items.length === 0) return;
+            loading.show(true, i18n.t("Removing intermediate approval..."));
+            const result = await compositionRoot.malDataApproval.updateStatus({
+                items,
+                action: "intermediateUnapprove",
+                dataSetsConfig,
+            });
+            if (!result)
+                setGlobalMessage({
+                    type: "error",
+                    message: i18n.t("Error when trying to remove intermediate approval"),
+                });
+
+            reload();
+            loading.hide();
+        },
+        [compositionRoot.malDataApproval, reload, loading, dataSetsConfig]
+    );
+
     const closeDataDifferencesDialog = useCallback(() => {
         closeDialog();
         disableRevoke();
@@ -206,6 +252,8 @@ export function useDataApprovalActions(props: {
             incompleteAction: incompleteAction,
             revokeAction: revokeAction,
             submitAction: submitAction,
+            intermediateApproveAction: intermediateApproveAction,
+            intermediateUnapproveAction: intermediateUnapproveAction,
         },
     };
 }

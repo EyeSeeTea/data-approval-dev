@@ -15,6 +15,8 @@ type ActiveDataApprovalActionsState = {
     isIncompleteActionVisible: (rows: DataApprovalViewModel[]) => boolean;
     isRevokeActionVisible: (rows: DataApprovalViewModel[]) => boolean;
     isSubmitActionVisible: (rows: DataApprovalViewModel[]) => boolean;
+    isIntermediateApproveActionVisible: (rows: DataApprovalViewModel[]) => boolean;
+    isIntermediateUnapproveActionVisible: (rows: DataApprovalViewModel[]) => boolean;
 };
 
 export function getDataSetAccess(options: {
@@ -49,9 +51,53 @@ export function useActiveDataApprovalActions(props: {
                     dataSetsConfig,
                     dataSetId: row.dataSetUid,
                 });
-                return row.lastUpdatedValue && Number(row.modificationCount) > 0 && hasAccess;
+                // When a dataset requires intermediate approval, the final Approve
+                // action is only offered once the effective intermediate state is
+                // "approved" (stored Yes AND no pending modifications). See the
+                // derivation in getDataApprovalViews. When the flag is off, the
+                // effective status is "na" and Approve behaves as before.
+                const intermediateGateOk =
+                    row.effectiveIntermediateApproval === "na" || row.effectiveIntermediateApproval === "approved";
+                return row.lastUpdatedValue && Number(row.modificationCount) > 0 && hasAccess && intermediateGateOk;
             });
         },
+        [config.currentUser, dataSetsConfig]
+    );
+
+    const isIntermediateApproveActionVisible = useCallback(
+        (rows: DataApprovalViewModel[]) =>
+            _.every(rows, row => {
+                const hasAccess = getDataSetAccess({
+                    action: "intermediateApprove",
+                    user: config.currentUser,
+                    dataSetsConfig,
+                    dataSetId: row.dataSetUid,
+                });
+                return (
+                    row.intermediateApprovalRequired &&
+                    row.effectiveIntermediateApproval === "notApproved" &&
+                    row.lastUpdatedValue &&
+                    Number(row.modificationCount) > 0 &&
+                    Boolean(hasAccess)
+                );
+            }),
+        [config.currentUser, dataSetsConfig]
+    );
+
+    const isIntermediateUnapproveActionVisible = useCallback(
+        (rows: DataApprovalViewModel[]) =>
+            _.every(rows, row => {
+                const hasAccess = getDataSetAccess({
+                    action: "intermediateApprove",
+                    user: config.currentUser,
+                    dataSetsConfig,
+                    dataSetId: row.dataSetUid,
+                });
+                // Unapprove is offered when the stored value is Yes (regardless of
+                // modifications masking it), but not once the final Approve has landed —
+                // the user must Revoke first in that case.
+                return row.intermediateApprovalRequired && row.intermediateApproved && !row.approved && Boolean(hasAccess);
+            }),
         [config.currentUser, dataSetsConfig]
     );
 
@@ -155,5 +201,7 @@ export function useActiveDataApprovalActions(props: {
         isIncompleteActionVisible: isIncompleteActionVisible,
         isRevokeActionVisible: isRevokeActionVisible,
         isSubmitActionVisible: isSubmitActionVisible,
+        isIntermediateApproveActionVisible: isIntermediateApproveActionVisible,
+        isIntermediateUnapproveActionVisible: isIntermediateUnapproveActionVisible,
     };
 }

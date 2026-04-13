@@ -26,6 +26,8 @@ export type DataSetConfigurationAttrs = {
     oldDataSourceId: Id;
     submitAndComplete: boolean;
     revokeAndIncomplete: boolean;
+    intermediateApprovalRequired: boolean;
+    intermediateApproveCode: string;
 };
 
 export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
@@ -48,6 +50,17 @@ export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
             oldDataSourceId: "",
             submitAndComplete: false,
             revokeAndIncomplete: false,
+            intermediateApprovalRequired: false,
+            intermediateApproveCode: "",
+        });
+    }
+
+    static withDefaults(attrs: Partial<DataSetConfigurationAttrs>): DataSetConfiguration {
+        const defaults = DataSetConfiguration.initial()._getAttributes();
+        return new DataSetConfiguration({
+            ...defaults,
+            ...attrs,
+            permissions: { ...defaults.permissions, ...(attrs.permissions ?? {}) },
         });
     }
 
@@ -88,6 +101,14 @@ export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
 
     updateRevokeAndIncomplete(value: boolean): DataSetConfiguration {
         return this._update({ revokeAndIncomplete: value });
+    }
+
+    updateIntermediateApprovalRequired(value: boolean): DataSetConfiguration {
+        return this._update({ intermediateApprovalRequired: value });
+    }
+
+    updateIntermediateApproveDataElement(newDataElementCode: string): DataSetConfiguration {
+        return this._update({ intermediateApproveCode: newDataElementCode });
     }
 
     hasPermission(action: DataSetConfigurationAction, username: string, userGroupCodes: Code[]): boolean {
@@ -145,11 +166,20 @@ export class DataSetConfiguration extends Struct<DataSetConfigurationAttrs>() {
             revoke: DataSetConfiguration.EMPTY_PERMISSIONS,
             submit: DataSetConfiguration.EMPTY_PERMISSIONS,
             approve: DataSetConfiguration.EMPTY_PERMISSIONS,
+            intermediateApprove: DataSetConfiguration.EMPTY_PERMISSIONS,
         };
     }
 }
 
-export const dataSetConfigurationActions = ["read", "complete", "incomplete", "submit", "revoke", "approve"] as const;
+export const dataSetConfigurationActions = [
+    "read",
+    "complete",
+    "incomplete",
+    "submit",
+    "revoke",
+    "intermediateApprove",
+    "approve",
+] as const;
 
 export type DataSetConfigurationAction = typeof dataSetConfigurationActions[number];
 type DataSetConfigurationError = ValidationError<DataSetConfigurationAttrs>;

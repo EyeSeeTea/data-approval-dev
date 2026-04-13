@@ -22,7 +22,7 @@ import { ConfirmationDialog } from "@eyeseetea/d2-ui-components";
 import { DataApprovalViewModel, getDataApprovalViews } from "../DataApprovalViewModel";
 import { DataSetsFilter, Filters } from "./Filters";
 import { DataDifferencesList } from "../DataDifferencesList";
-import { PlaylistAddCheck, ThumbUp } from "@material-ui/icons";
+import { PlaylistAddCheck, ThumbUp, ThumbUpAltOutlined, ThumbDownAltOutlined } from "@material-ui/icons";
 import { Namespaces } from "../../../../data/common/clients/storage/Namespaces";
 import { emptyApprovalFilter } from "./hooks/useDataApprovalFilters";
 import { useDataApprovalListColumns } from "./hooks/useDataApprovalListColumns";
@@ -113,6 +113,22 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                         isActive: activeActions.isRevokeActionVisible,
                     },
                     {
+                        name: "intermediateApprove",
+                        text: i18n.t("Intermediate Approve"),
+                        icon: <ThumbUpAltOutlined />,
+                        multiple: true,
+                        onClick: onTableActionClick.intermediateApproveAction,
+                        isActive: activeActions.isIntermediateApproveActionVisible,
+                    },
+                    {
+                        name: "intermediateUnapprove",
+                        text: i18n.t("Intermediate Unapprove"),
+                        icon: <ThumbDownAltOutlined />,
+                        multiple: true,
+                        onClick: onTableActionClick.intermediateUnapproveAction,
+                        isActive: activeActions.isIntermediateUnapproveActionVisible,
+                    },
+                    {
                         name: "approve",
                         text: i18n.t("Approve"),
                         icon: <ThumbUp />,
@@ -145,12 +161,16 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                 onTableActionClick.revokeAction,
                 onTableActionClick.approveAction,
                 onTableActionClick.getDifferenceAction,
+                onTableActionClick.intermediateApproveAction,
+                onTableActionClick.intermediateUnapproveAction,
                 activeActions.isCompleteActionVisible,
                 activeActions.isIncompleteActionVisible,
                 activeActions.isSubmitActionVisible,
                 activeActions.isRevokeActionVisible,
                 activeActions.isApproveActionVisible,
                 activeActions.isGetDifferenceActionVisible,
+                activeActions.isIntermediateApproveActionVisible,
+                activeActions.isIntermediateUnapproveActionVisible,
             ]
         );
 
@@ -171,7 +191,7 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                     if (isCancelled) return;
 
                     console.debug("Reloading", reloadKey);
-                    setRows(getDataApprovalViews(objects, config.timeZoneId));
+                    setRows(getDataApprovalViews(objects, config.timeZoneId, dataSetsConfig));
                     setIsLoading(false);
                     setError(undefined);
                 } catch (err) {
@@ -292,9 +312,35 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
     }
 );
 
+const sortableMalItemFields: Record<keyof MalDataApprovalItem, true> = {
+    dataSetUid: true,
+    dataSet: true,
+    orgUnitUid: true,
+    orgUnit: true,
+    orgUnitCode: true,
+    period: true,
+    attribute: true,
+    approvalWorkflowUid: true,
+    approvalWorkflow: true,
+    completed: true,
+    validated: true,
+    approved: true,
+    lastUpdatedValue: true,
+    lastDateOfSubmission: true,
+    lastDateOfApproval: true,
+    modificationCount: true,
+    monitoring: true,
+    intermediateApproved: true,
+};
+
 function getSortingFromTableSorting(sorting: TableSorting<DataApprovalViewModel>): Sorting<MalDataApprovalItem> {
+    const field = sorting.field;
+    const malItemField =
+        field !== "id" && (sortableMalItemFields as Record<string, boolean>)[field as string]
+            ? (field as keyof MalDataApprovalItem)
+            : ("period" as const);
     return {
-        field: sorting.field === "id" ? "period" : sorting.field,
+        field: malItemField,
         direction: sorting.order,
     };
 }

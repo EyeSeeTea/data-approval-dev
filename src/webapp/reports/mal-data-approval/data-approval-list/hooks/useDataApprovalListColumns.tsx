@@ -41,6 +41,23 @@ export function useDataApprovalListColumns() {
                 sortable: false,
                 getValue: row => (row.lastDateOfApproval ? i18n.t("Approved") : i18n.t("Not approved")),
             },
+            {
+                name: "effectiveIntermediateApproval",
+                text: i18n.t("Intermediate approval status"),
+                sortable: false,
+                hidden: true,
+                getValue: row => {
+                    switch (row.effectiveIntermediateApproval) {
+                        case "approved":
+                            return i18n.t("Approved");
+                        case "notApproved":
+                            return i18n.t("Not approved");
+                        case "na":
+                        default:
+                            return i18n.t("N/A");
+                    }
+                },
+            },
             { name: "modificationCount", text: i18n.t("Modification Count"), sortable: false },
             {
                 name: "lastUpdatedValue",

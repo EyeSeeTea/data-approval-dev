@@ -39,11 +39,13 @@ export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
         onChange(newConfiguration);
     };
 
-    const updateDataElement = (code: string, type: "submit" | "approval") => {
+    const updateDataElement = (code: string, type: "submit" | "approval" | "intermediateApprove") => {
         const newConfiguration =
             type === "submit"
                 ? configuration.updateSubmissionDateDataElement(code)
-                : configuration.updateApprovalDateDataElement(code);
+                : type === "approval"
+                ? configuration.updateApprovalDateDataElement(code)
+                : configuration.updateIntermediateApproveDataElement(code);
         onChange(newConfiguration);
     };
 
@@ -145,9 +147,29 @@ export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
                         />
                         {i18n.t("Revoke also marks dataSet as incomplete")}
                     </Grid>
+                    <Grid item xs={6}>
+                        <Checkbox
+                            checked={configuration.intermediateApprovalRequired}
+                            onChange={e => {
+                                onChange(configuration.updateIntermediateApprovalRequired(e.target.checked));
+                            }}
+                        />
+                        {i18n.t("Intermediate approval required")}
+                    </Grid>
+                    <Grid item xs={6}>
+                        <EntitySelector
+                            type="dataElements"
+                            label={i18n.t("Intermediate Approve DataElement")}
+                            value={configuration.intermediateApproveCode}
+                            onChange={entity => updateDataElement(entity.code, "intermediateApprove")}
+                            onlyWithCode
+                            disabled={!configuration.intermediateApprovalRequired}
+                        />
+                    </Grid>
                     <div className={classes.permissionContainer}>
                         {dataSetConfigurationActions.map(action => {
                             const { userGroups, users } = configuration.permissions[action];
+                            const label = actionLabels[action];
 
                             return (
                                 <div key={action} className={classes.permissionItem}>
@@ -158,10 +180,10 @@ export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
                                         fullWidth
                                         size="small"
                                     >
-                                        {i18n.t('Edit "{{action}}" Permissions', { action })}
+                                        {i18n.t('Edit "{{action}}" Permissions', { action: label })}
                                     </Button>
                                     <PermissionsSharing
-                                        title={action}
+                                        title={label}
                                         visible={selectedPermission === action}
                                         usernames={users}
                                         userGroupCodes={userGroups}
@@ -192,6 +214,16 @@ export const DataSetConfigForm: React.FC<DataSetConfigFormProps> = props => {
             </form>
         </Paper>
     );
+};
+
+const actionLabels: Record<DataSetConfigurationAction, string> = {
+    read: "read",
+    complete: "complete",
+    incomplete: "incomplete",
+    submit: "submit",
+    revoke: "revoke",
+    approve: "approve",
+    intermediateApprove: "intermediate approve",
 };
 
 const useStyles = makeStyles((theme: Theme) =>
