@@ -54,7 +54,7 @@ The Data Approval list relies on analytics tables to compute modification counts
 
 When this happens, the app shows the following message in a red alert box and the table is not displayed:
 
-> **The list could not be loaded because analytics jobs are currently running. Please try again in a few minutes by clicking 'Apply Filters'.**
+> **The list could not be loaded because analytics jobs are currently running. Please try again in a few seconds by clicking 'Apply Filters'.**
 
 When you see this message, simply wait until the analytics job finishes and click **Apply Filters** again to retry.
 

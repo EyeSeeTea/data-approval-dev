@@ -183,7 +183,7 @@ export const DataApprovalList: React.FC = React.memo(() => {
                 if (status === 409) {
                     setError(
                         i18n.t(
-                            "The list could not be loaded because analytics jobs are currently running. Please try again in a few minutes by clicking 'Apply Filters'."
+                            "The list could not be loaded because analytics jobs are currently running. Please try again in a few seconds by clicking 'Apply Filters'."
                         )
                     );
                     setRows([]);
