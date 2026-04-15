@@ -8,6 +8,7 @@ import { DataSetConfiguration } from "../domain/entities/DataSetConfiguration";
 import { DataSetConfigurationD2Repository } from "../data/DataSetConfigurationD2Repository";
 import { UserD2Repository } from "../data/UserD2Repository";
 import { SaveDataSetConfigurationUseCase } from "../domain/usecases/SaveDataSetConfigurationUseCase";
+import { resolveD2ApiAuth } from "./common/d2ApiAuth";
 
 const persistOptions = ["disk", "dhis"] as const;
 type PersistOption = typeof persistOptions[number];
@@ -46,10 +47,7 @@ async function main() {
     try {
         const args = parser.parse_args();
         const baseUrl = process.env.REACT_APP_DHIS2_BASE_URL || "";
-        const authString = process.env.REACT_APP_DHIS2_AUTH || "";
-
-        const [username, password] = authString.split(":", 2);
-        if (!username || !password) throw new Error("Invalid DHIS2 authentication");
+        const auth = resolveD2ApiAuth();
 
         const persistOption = persistOptions.find(po => po === args.persist);
         if (!persistOption)
@@ -57,7 +55,7 @@ async function main() {
                 `Invalid persist option: '${args.persist}'. Valid options are: ${persistOptions.join(", ")}`
             );
 
-        const api = new D2Api({ agent: {}, baseUrl, auth: { username, password } });
+        const api = new D2Api({ agent: {}, baseUrl, auth });
 
         await generateSqlViews({
             api,

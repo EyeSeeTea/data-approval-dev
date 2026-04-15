@@ -25,6 +25,20 @@ REACT_APP_DHIS2_BASE_URL=http://localhost:8080
 REACT_APP_DHIS2_AUTH=admin:district
 ```
 
+### Authenticating against an instance with 2FA
+
+When the target DHIS2 instance has two-factor authentication enabled and plain `username:password` no longer works from the CLI, the setup scripts (`yarn run generate-dataset-approval`, `yarn run generate-sqlviews`) also accept a **Personal Access Token** via `REACT_APP_DHIS2_PAT`. PATs bypass 2FA on DHIS2 API requests.
+
+1.  In DHIS2, open your user profile → *Edit profile* → *Personal access tokens* and create a new token. Copy it — DHIS2 only shows it once.
+2.  Add it to `.env.local` and drop `REACT_APP_DHIS2_AUTH`:
+
+    ```
+    REACT_APP_DHIS2_BASE_URL=https://your.dhis2
+    REACT_APP_DHIS2_PAT=d2pat_XXXXXXXXXXXXXXXXXXXX
+    ```
+
+When both variables are set, the scripts prefer the PAT.
+
 ## Development
 
 Start the development server at `http://localhost:8082` using `https://play.dhis2.org/2.34` as a backend:
