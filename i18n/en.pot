@@ -5,8 +5,8 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"POT-Creation-Date: 2026-01-28T23:21:16.585Z\n"
-"PO-Revision-Date: 2026-01-28T23:21:16.585Z\n"
+"POT-Creation-Date: 2026-03-06T15:53:43.333Z\n"
+"PO-Revision-Date: 2026-03-06T15:53:43.333Z\n"
 
 msgid "0"
 msgstr ""
@@ -48,6 +48,9 @@ msgid "Submit also approves the dataSet"
 msgstr ""
 
 msgid "Revoke also marks dataSet as incomplete"
+msgstr ""
+
+msgid "Restrict modification display by Data Element Group sharing"
 msgstr ""
 
 msgid "Edit \"{{action}}\" Permissions"

@@ -1,4 +1,4 @@
-import { D2Api } from "@eyeseetea/d2-api/2.34";
+import { D2Api } from "../../../types/d2-api";
 import _ from "lodash";
 import { OrgUnitWithChildren } from "../../../domain/reports/mal-data-approval/entities/OrgUnitWithChildren";
 import { OrgUnitWithChildrenRepository } from "../../../domain/reports/mal-data-approval/repositories/OrgUnitWithChildrenRepository";

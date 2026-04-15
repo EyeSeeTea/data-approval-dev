@@ -1002,16 +1002,18 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
     }
 
     async getDefaultCombination(): Promise<NamedRef> {
+        const defaultName = "default";
         const response = await this.api.models.categoryOptionCombos
             .get({
                 fields: { id: true, name: true },
                 paging: false,
-                filters: { name: { eq: "default" } },
+                filter: { name: { eq: defaultName } },
             })
             .getData();
 
         const defaultCombo = response.objects[0];
-        if (!defaultCombo) throw new Error("Default category option combo not found");
+        if (!defaultCombo || defaultCombo.name !== defaultName)
+            throw new Error("Default category option combo not found");
 
         return { id: defaultCombo.id, name: defaultCombo.name };
     }
