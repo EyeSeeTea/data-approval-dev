@@ -165,7 +165,6 @@ export class Dhis2ConfigRepository implements ConfigRepository {
                     id: true,
                     displayName: true,
                     organisationUnits: userOrgUnitFields,
-                    dataViewOrganisationUnits: userOrgUnitFields,
                     userCredentials: {
                         username: true,
                         userRoles: { id: true, name: true, authorities: true },
@@ -175,14 +174,9 @@ export class Dhis2ConfigRepository implements ConfigRepository {
             })
             .getData();
 
-        const viewOrgUnits = d2User.dataViewOrganisationUnits.map(ou => ({ ...ou, children: ou.children }));
-        const writeOrgUnits = d2User.organisationUnits.map(ou => ({ ...ou, children: ou.children }));
-
-        const orgUnits = _(viewOrgUnits)
-            .concat(writeOrgUnits)
-            .filter(ou => ou.level <= 3)
-            .unionBy(ou => ou.id)
-            .value();
+        const orgUnits = d2User.organisationUnits
+            .map(ou => ({ ...ou, children: ou.children }))
+            .filter(ou => ou.level <= 3);
 
         return {
             id: d2User.id,
