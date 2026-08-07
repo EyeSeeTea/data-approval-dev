@@ -86,6 +86,13 @@ export class MonitoringTwoFactorD2Repository implements MonitoringTwoFactorRepos
                             name: true,
                             email: true,
                             lastUpdated: true,
+                            // DHIS2 >= 43 flattens userCredentials fields into User; userCredentials is kept for older versions
+                            username: true,
+                            lastLogin: true,
+                            externalAuth: true,
+                            disabled: true,
+                            twoFactorEnabled: true,
+                            openId: true,
                             userCredentials: {
                                 id: true,
                                 username: true,
@@ -111,17 +118,18 @@ export class MonitoringTwoFactorD2Repository implements MonitoringTwoFactorRepos
 
                 const responseUsers = response.objects
                     .map((user: any) => {
+                        const credentials = user.userCredentials;
                         return {
                             id: user.id,
                             name: user.name,
-                            username: user.userCredentials.username,
-                            lastLogin: user.userCredentials.lastLogin,
+                            username: user.username ?? credentials?.username,
+                            lastLogin: user.lastLogin ?? credentials?.lastLogin,
                             lastUpdated: user.lastUpdated,
-                            externalAuth: user.userCredentials.externalAuth,
+                            externalAuth: user.externalAuth ?? credentials?.externalAuth,
                             email: user.email ?? "-",
-                            openId: user.openId ?? "-",
-                            disabled: user.userCredentials.disabled,
-                            twoFA: user.userCredentials.twoFA,
+                            openId: user.openId ?? credentials?.openId ?? "-",
+                            disabled: user.disabled ?? credentials?.disabled,
+                            twoFA: user.twoFactorEnabled ?? credentials?.twoFA,
                             userGroups: user.userGroups,
                         };
                     })

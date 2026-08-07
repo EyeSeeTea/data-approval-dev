@@ -165,6 +165,9 @@ export class Dhis2ConfigRepository implements ConfigRepository {
                     id: true,
                     displayName: true,
                     organisationUnits: userOrgUnitFields,
+                    // DHIS2 >= 43 flattens userCredentials fields into User; userCredentials is kept for older versions
+                    username: true,
+                    userRoles: { id: true, name: true, authorities: true },
                     userCredentials: {
                         username: true,
                         userRoles: { id: true, name: true, authorities: true },
@@ -178,13 +181,16 @@ export class Dhis2ConfigRepository implements ConfigRepository {
             .map(ou => ({ ...ou, children: ou.children }))
             .filter(ou => ou.level <= 3);
 
+        const userRoles = d2User.userRoles ?? d2User.userCredentials?.userRoles ?? [];
+
         return {
             id: d2User.id,
             name: d2User.displayName,
             orgUnits: orgUnits,
             userGroups: d2User.userGroups,
-            ...d2User.userCredentials,
-            isAdmin: d2User.userCredentials.userRoles.some(role => role.authorities.includes("ALL")),
+            username: d2User.username ?? d2User.userCredentials?.username ?? "",
+            userRoles: userRoles,
+            isAdmin: userRoles.some(role => role.authorities.includes("ALL")),
         };
     }
 }

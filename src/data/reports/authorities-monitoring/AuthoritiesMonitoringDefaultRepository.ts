@@ -12,7 +12,7 @@ import {
     AuthoritiesMonitoringItem,
     AuthoritiesMonitoringPaginatedObjects,
 } from "../../../domain/reports/authorities-monitoring/entities/AuthoritiesMonitoringItem";
-import { NamedRef } from "../../../domain/common/entities/Base";
+import { NamedRef, Ref } from "../../../domain/common/entities/Base";
 import { d2ToolsNamespace } from "../../common/clients/storage/Namespaces";
 import { downloadFile } from "../../common/utils/download-file";
 import { CsvWriterDataSource } from "../../common/CsvWriterCsvDataSource";
@@ -280,6 +280,14 @@ export class AuthoritiesMonitoringDefaultRepository implements AuthoritiesMonito
                         fields: {
                             id: true,
                             name: true,
+                            // DHIS2 >= 43 flattens userCredentials fields into User; userCredentials is kept for older versions
+                            username: true,
+                            lastLogin: true,
+                            userRoles: {
+                                id: true,
+                                name: true,
+                                authorities: true,
+                            },
                             userCredentials: {
                                 id: true,
                                 username: true,
@@ -302,7 +310,7 @@ export class AuthoritiesMonitoringDefaultRepository implements AuthoritiesMonito
                     })
                     .getData();
 
-                users = users.concat(response.objects);
+                users = users.concat(response.objects.map(toUser));
                 currentPage++;
             } while (response.pager.page < Math.ceil(response.pager.total / pageSize));
             return users;
@@ -312,12 +320,43 @@ export class AuthoritiesMonitoringDefaultRepository implements AuthoritiesMonito
     }
 
     private async getUserTemplate(userId: string): Promise<User> {
-        return await this.api
-            .get<User>(`/users/${userId}`, {
-                fields: "id,name,userCredentials[username,lastLogin,userRoles[id,name,authorities]]",
+        const d2User = await this.api
+            .get<D2UserWithCredentialsFallback>(`/users/${userId}`, {
+                fields: "id,name,username,lastLogin,userRoles[id,name,authorities],userCredentials[id,username,lastLogin,userRoles[id,name,authorities]]",
             })
             .getData();
+
+        return toUser(d2User);
     }
+}
+
+type D2UserWithCredentialsFallback = NamedRef & {
+    userGroups?: Ref[];
+    username?: string;
+    lastLogin?: string;
+    userRoles?: UserRole[];
+    userCredentials?: {
+        id?: string;
+        username?: string;
+        lastLogin?: string;
+        userRoles?: UserRole[];
+    };
+};
+
+// DHIS2 >= 43 flattens userCredentials fields into User; userCredentials is kept for older versions
+function toUser(d2User: D2UserWithCredentialsFallback): User {
+    const credentials = d2User.userCredentials;
+    return {
+        id: d2User.id,
+        name: d2User.name,
+        userGroups: d2User.userGroups ?? [],
+        userCredentials: {
+            id: credentials?.id ?? d2User.id,
+            username: d2User.username ?? credentials?.username ?? "",
+            lastLogin: d2User.lastLogin ?? credentials?.lastLogin ?? "",
+            userRoles: d2User.userRoles ?? credentials?.userRoles ?? [],
+        },
+    };
 }
 
 const emptyUserMonitoring: UserMonitoring = {
