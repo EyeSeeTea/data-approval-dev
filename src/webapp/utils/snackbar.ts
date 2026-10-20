@@ -1,6 +1,6 @@
 import React from "react";
-import _ from "lodash";
 import { useSnackbar } from "@eyeseetea/d2-ui-components";
+import { getErrorMessage } from "./errors";
 
 export function useSnackbarOnError<T, Args extends any[]>(fn: (...args: Args) => Promise<T>) {
     const snackbar = useSnackbar();
@@ -9,13 +9,9 @@ export function useSnackbarOnError<T, Args extends any[]>(fn: (...args: Args) =>
         async (...args: Args) => {
             try {
                 return await fn(...args);
-            } catch (err: any) {
+            } catch (err) {
                 console.error(err);
-                const bodyMessage = err.response?.data?.message;
-                const message = _([err.message || err?.toString(), bodyMessage])
-                    .compact()
-                    .join(" - ");
-                snackbar.error(message);
+                snackbar.error(getErrorMessage(err));
                 return undefined;
             }
         },
