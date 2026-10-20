@@ -69,7 +69,8 @@
         "approve-mal-datavalues": "npx ts-node -P tsconfig-cli.json src/scripts/approve-mal-datavalues.ts",
         "check-data-differences": "npx ts-node -P tsconfig-cli.json src/scripts/check-data-differences.ts",
         "generate-sqlviews": "npx tsx src/scripts/generate-sqlviews.ts",
-        "generate-dataset-approval": "npx tsx src/scripts/generate-dataset-approval.ts"
+        "generate-dataset-approval": "npx tsx src/scripts/generate-dataset-approval.ts",
+        "generate-mal-sqlviews": "npx tsx src/scripts/generate-mal-sqlviews.ts"
     },
     "husky": {
         "hooks": {
