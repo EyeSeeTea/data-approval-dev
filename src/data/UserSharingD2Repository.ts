@@ -9,8 +9,7 @@ export class UserSharingD2Repository implements UserSharingRepository {
 
     get(query: string): FutureData<UserSharing> {
         const options = {
-            // DHIS2 >= 43 flattens userCredentials fields into User; userCredentials is kept for older versions
-            fields: { id: true, displayName: true, username: true, userCredentials: { username: true }, code: true },
+            fields: { id: true, displayName: true, username: true, code: true },
             filter: { displayName: { ilike: query } },
         };
 
@@ -18,7 +17,7 @@ export class UserSharingD2Repository implements UserSharingRepository {
             users: userSearch.users.map(user => ({
                 id: user.id,
                 name: user.displayName,
-                username: user.username ?? user.userCredentials?.username ?? "",
+                username: user.username,
             })),
             userGroups: userSearch.userGroups
                 .filter(userGroup => Boolean(userGroup.code))

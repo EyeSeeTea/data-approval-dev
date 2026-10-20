@@ -1,4 +1,4 @@
-import { D2Api, MetadataPick } from "../types/d2-api";
+import { D2Api } from "../types/d2-api";
 import { UserRepository } from "../domain/repositories/UserRepository";
 import { Future, FutureData } from "../domain/generic/Future";
 import { apiToFuture } from "./api-futures";
@@ -18,10 +18,8 @@ export class UserD2Repository implements UserRepository {
                         fields: {
                             id: true,
                             displayName: true,
-                            // DHIS2 >= 43 flattens userCredentials fields into User; userCredentials is kept for older versions
                             username: true,
                             userRoles: { authorities: true },
-                            userCredentials: { username: true, userRoles: { authorities: true } },
                         },
                         filter: { username: { in: userIds } },
                         paging: false,
@@ -33,14 +31,13 @@ export class UserD2Repository implements UserRepository {
         return Future.parallel($requests, { concurrency: 3 }).map(allResponses => {
             return allResponses.flat().flatMap(response => {
                 return response.objects.map(d2User => {
-                    const userRoles = d2User.userRoles ?? d2User.userCredentials?.userRoles ?? [];
                     return User.create({
                         id: d2User.id,
                         name: d2User.displayName,
-                        username: d2User.username ?? d2User.userCredentials?.username ?? "",
+                        username: d2User.username,
                         userGroups: [],
                         userRoles: [],
-                        isSuperAdmin: userRoles.some(role => role.authorities.includes("ALL")),
+                        isSuperAdmin: d2User.userRoles.some(role => role.authorities.includes("ALL")),
                     });
                 });
             });
@@ -48,36 +45,25 @@ export class UserD2Repository implements UserRepository {
     }
 
     public getCurrent(): FutureData<User> {
-        return apiToFuture(this.api.currentUser.get({ fields: userFields })).map(d2User => {
-            const res = this.buildUser(d2User);
-            return res;
-        });
-    }
-
-    private buildUser(d2User: D2User) {
-        const userRoles = d2User.userRoles ?? d2User.userCredentials?.userRoles ?? [];
-        return new User({
-            id: d2User.id,
-            name: d2User.displayName,
-            userGroups: d2User.userGroups,
-            username: d2User.username ?? d2User.userCredentials?.username ?? "",
-            userRoles: userRoles,
-            isSuperAdmin: userRoles.some(role => role.authorities.includes("ALL")),
-        });
+        return apiToFuture(this.api.currentUser.get({ fields: currentUserFields })).map(
+            d2User =>
+                new User({
+                    id: d2User.id,
+                    name: d2User.displayName,
+                    userGroups: d2User.userGroups,
+                    username: d2User.username,
+                    userRoles: d2User.userRoles,
+                    isSuperAdmin: d2User.authorities.includes("ALL"),
+                })
+        );
     }
 }
 
-const userFields = {
+const currentUserFields = {
     id: true,
     displayName: true,
     userGroups: { id: true, name: true, code: true },
-    // DHIS2 >= 43 flattens userCredentials fields into User; userCredentials is kept for older versions
     username: true,
-    userRoles: { id: true, name: true, authorities: true },
-    userCredentials: {
-        username: true,
-        userRoles: { id: true, name: true, authorities: true },
-    },
+    userRoles: { id: true, name: true },
+    authorities: true,
 } as const;
-
-type D2User = MetadataPick<{ users: { fields: typeof userFields } }>["users"][number];
