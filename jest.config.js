@@ -1,7 +1,9 @@
 module.exports = {
     collectCoverageFrom: ["src/**/*.js"],
     testPathIgnorePatterns: ["/node_modules/"],
-    transformIgnorePatterns: ["/node_modules/(?!@eyeseetea/d2-ui-components)"],
+    transformIgnorePatterns: [
+        "/node_modules/(?!(@eyeseetea/d2-ui-components|@eyeseetea/d2-api/node_modules/axios|axios)/)",
+    ],
     modulePaths: ["src"],
     moduleDirectories: ["node_modules"],
     moduleNameMapper: {
