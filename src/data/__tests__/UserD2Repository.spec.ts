@@ -6,7 +6,7 @@ import superuserMe from "./data/superuserMe.json";
 import superuserMeWithRolesOnlyInCredentials from "./data/superuserMeWithRolesOnlyInCredentials.json";
 import nonSuperuserMe from "./data/nonSuperuserMe.json";
 
-const getCurrent = (me: unknown) => new UserD2Repository(getApiReturning("/me", me)).getCurrent().toPromise();
+const getCurrent = (me: unknown) => new UserD2Repository(getApiReturning({ "/me": me })).getCurrent().toPromise();
 
 describe("UserD2Repository", () => {
     describe("getCurrent", () => {

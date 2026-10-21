@@ -5,7 +5,7 @@ import superuserMe from "../../__tests__/data/superuserMe.json";
 import superuserMeWithRolesOnlyInCredentials from "../../__tests__/data/superuserMeWithRolesOnlyInCredentials.json";
 import nonSuperuserMe from "../../__tests__/data/nonSuperuserMe.json";
 
-const getCurrentUser = (me: unknown) => new Dhis2ConfigRepository(getApiReturning("/me", me)).getCurrentUser();
+const getCurrentUser = (me: unknown) => new Dhis2ConfigRepository(getApiReturning({ "/me": me })).getCurrentUser();
 
 describe("Dhis2ConfigRepository", () => {
     describe("getCurrentUser", () => {
