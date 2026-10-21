@@ -29,7 +29,7 @@ max(lastupdated) as lastupdated
         FROM datavalue
         WHERE 
 		 datavalue.sourceid in (select organisationunitid from organisationunit where uid  ~ ('^' || replace('${orgUnits}', '-', '|') || '$'))
-		and datavalue.periodid in (select periodid from _periodstructure where iso  ~ ('^' || replace('${periods}', '-', '|') || '$'))
+		and datavalue.periodid in (select periodid from analytics_rs_periodstructure where iso  ~ ('^' || replace('${periods}', '-', '|') || '$'))
 and datavalue.dataelementid in ( select dse.dataelementid from  datasetelement dse  where  dse.datasetid = (select datasetid from dataset where uid  ~ ('^' || replace('${dataSets}', '-', '|') || '$')) )
 and datavalue.deleted = false
 and datavalue.dataelementid not in (select dataelementid from dataelement where name='MAL - Submission date')

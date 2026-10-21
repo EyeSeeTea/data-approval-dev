@@ -30,6 +30,7 @@ import { useActiveDataApprovalActions } from "./hooks/useActiveDataApprovalActio
 import { useDataApprovalActions } from "./hooks/useDataApprovalActions";
 import { useSelectablePeriods } from "./hooks/useSelectablePeriods";
 import { Alert } from "../../../components/alert/Alert";
+import { getErrorMessage } from "../../../utils/errors";
 import { makeStyles } from "@material-ui/core";
 import { DataSetWithConfigPermissions } from "../../../../domain/usecases/GetApprovalConfigurationsUseCase";
 
@@ -175,16 +176,16 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                     setIsLoading(false);
                     setError(undefined);
                 } catch (err) {
-                    // @ts-expect-error
-                    const status = err?.response?.status;
-                    if (status === 409) {
-                        setError(
-                            i18n.t(
-                                "The list could not be loaded because analytics jobs are currently running. Please try again in a few seconds by clicking 'Apply Filters'."
-                            )
-                        );
-                        setRows([]);
-                    }
+                    if (isCancelled) return;
+
+                    console.error(err);
+                    setError(
+                        i18n.t("The list could not be loaded. {{message}}", {
+                            message: getErrorMessage(err),
+                            interpolation: { escapeValue: false },
+                        })
+                    );
+                    setRows([]);
                 } finally {
                     if (!isCancelled) {
                         setIsLoading(false);
