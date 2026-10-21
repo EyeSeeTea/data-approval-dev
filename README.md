@@ -51,13 +51,16 @@ Before a dataset shows up in the app, three pieces of DHIS2 metadata must be in 
 
 Steps 1 and 2 are automated by the setup scripts described below. Step 3 can be done either by the same `generate-sqlviews --persist dhis` invocation (which creates a default configuration) or by hand from the in-app **DataSet Configurations** settings screen.
 
+The approval list also needs the `MAL Data approval header` SQL view, which lists the org units assigned to each dataset. It is shared by all datasets, so it is created once per instance with `yarn run generate-mal-sqlviews` (see [Generate the shared MAL SQL view](#generate-the-shared-mal-sql-view)).
+
 Typical end-to-end flow for a fresh dataset:
 
 1.  Populate `.env.local` with `REACT_APP_DHIS2_BASE_URL` and `REACT_APP_DHIS2_AUTH`.
-2.  Run `yarn run generate-dataset-approval` **without** `--post` to preview the APVD dataset that would be created, then re-run **with** `--post` to commit it.
-3.  Run `yarn run generate-sqlviews --persist dhis` to create the current-periods and old-periods SQL views in the instance (and a default `DataSetConfiguration`).
-4.  Open the app → *DataSet Configurations* → edit the newly created entry, adjust the *Submit Date* / *Approval Date* data elements if needed, and assign user groups / users to each permission (*Read*, *Complete*, *Incomplete*, *Submit*, *Revoke*, *Approve*). Save.
-5.  Open the main **Data Approval** list, apply filters and verify the rows for the new dataset appear with the expected statuses.
+2.  Only once per instance: run `yarn run generate-mal-sqlviews` **without** `--post` to validate the shared header SQL view, then re-run **with** `--post` to commit it.
+3.  Run `yarn run generate-dataset-approval` **without** `--post` to preview the APVD dataset that would be created, then re-run **with** `--post` to commit it.
+4.  Run `yarn run generate-sqlviews --persist dhis` to create the current-periods and old-periods SQL views in the instance (and a default `DataSetConfiguration`).
+5.  Open the app → *DataSet Configurations* → edit the newly created entry, adjust the *Submit Date* / *Approval Date* data elements if needed, and assign user groups / users to each permission (*Read*, *Complete*, *Incomplete*, *Submit*, *Revoke*, *Approve*). Save.
+6.  Open the main **Data Approval** list, apply filters and verify the rows for the new dataset appear with the expected statuses.
 
 ## Generate sql view for a dataSet
 
@@ -127,6 +130,32 @@ Notes:
 -   Long names/codes are automatically trimmed to stay within DHIS2's length limits; the trimmed values are logged to `trimmed_names_<dataSetCode>_<timestamp>.json`.
 -   DataElements without a code are reported in `warnings_dataelements_<dataSetCode>_<timestamp>.json`.
 -   On validation/import errors, saves details to `errors_<dataSetCode>_<timestamp>.json`.
+
+## Generate the shared MAL SQL view
+
+Script to create or update the `MAL Data approval header` SQL view from `src/data/reports/mal-data-approval/sql-views/mal-data-approval-header.sql`. The approval list queries it for every dataset, so it must exist once per instance.
+
+Make sure the following variables are configured in your `.env.local` file:
+
+```
+REACT_APP_DHIS2_BASE_URL=http://localhost:8080
+REACT_APP_DHIS2_AUTH='admin:district'
+```
+
+Run the script:
+
+```shell
+yarn run generate-mal-sqlviews --post
+```
+
+Parameters:
+
+-   `--post`: commit the SQL view to DHIS2 (default: validate only)
+
+Notes:
+
+-   The view is looked up by name. If it already exists, it is updated in place and keeps its id; otherwise it is created.
+-   Re-run it after changing `mal-data-approval-header.sql`.
 
 ## Where configuration lives
 

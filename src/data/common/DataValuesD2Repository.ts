@@ -1,4 +1,5 @@
 import _ from "lodash";
+import { Id } from "../../domain/common/entities/Base";
 import { DataValue, DataValuesSelector, DataValueToPost } from "../../domain/common/entities/DataValue";
 import { Stats } from "../../domain/common/entities/Stats";
 import { DataValuesRepository } from "../../domain/common/repositories/DataValuesRepository";
@@ -20,7 +21,7 @@ export class DataValuesD2Repository implements DataValuesRepository {
             children: options.children,
         });
 
-        const res = await res$.getData();
+        const res: D2DataValueSet = await res$.getData();
 
         const dataElementIds = _(res.dataValues)
             .map(dataValue => dataValue.dataElement)
@@ -48,7 +49,16 @@ export class DataValuesD2Repository implements DataValuesRepository {
         const dataElementsById = _(dataElements).fromPairs().value();
 
         return res.dataValues.map(dataValue => {
-            return { ...dataValue, dataElementName: dataElementsById[dataValue.dataElement] || "" };
+            return {
+                ...dataValue,
+                orgUnit: getRequiredField(dataValue.orgUnit ?? res.orgUnit, "orgUnit"),
+                period: getRequiredField(dataValue.period ?? res.period, "period"),
+                attributeOptionCombo: getRequiredField(
+                    dataValue.attributeOptionCombo ?? res.attributeOptionCombo,
+                    "attributeOptionCombo"
+                ),
+                dataElementName: dataElementsById[dataValue.dataElement] || "",
+            };
         });
     }
 
@@ -104,6 +114,32 @@ export class DataValuesD2Repository implements DataValuesRepository {
         });
     }
 }
+
+function getRequiredField(value: string | undefined, field: string): string {
+    if (value === undefined) throw new Error(`Data value without ${field}`);
+    return value;
+}
+
+/* When all the values share them, DHIS2 2.43 returns orgUnit, period and attributeOptionCombo
+   only at the root of the response instead of in each data value */
+type D2DataValueSet = Readonly<{
+    orgUnit?: Id;
+    period?: string;
+    attributeOptionCombo?: Id;
+    dataValues: ReadonlyArray<D2DataValue>;
+}>;
+
+type D2DataValue = Readonly<{
+    dataElement: Id;
+    categoryOptionCombo: Id;
+    value: string;
+    followup: boolean;
+    deleted?: boolean;
+    comment?: string;
+    orgUnit?: Id;
+    period?: string;
+    attributeOptionCombo?: Id;
+}>;
 
 type ResponseDataValues = {
     status: string;

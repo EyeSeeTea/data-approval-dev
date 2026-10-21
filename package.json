@@ -1,7 +1,7 @@
 {
     "name": "data-approval-extended",
     "description": "Data Approval Extended",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "license": "GPL-3.0",
     "author": "EyeSeeTea team",
     "homepage": ".",
@@ -19,7 +19,7 @@
         "@dhis2/ui": "7.16.2",
         "@dhis2/ui-core": "6.24.0",
         "@dhis2/ui-widgets": "6.24.0",
-        "@eyeseetea/d2-api": "1.20.0",
+        "@eyeseetea/d2-api": "1.21.0",
         "@eyeseetea/d2-ui-components": "2.6.10",
         "@material-ui/core": "4.12.3",
         "@material-ui/icons": "4.11.2",
@@ -69,7 +69,8 @@
         "approve-mal-datavalues": "npx ts-node -P tsconfig-cli.json src/scripts/approve-mal-datavalues.ts",
         "check-data-differences": "npx ts-node -P tsconfig-cli.json src/scripts/check-data-differences.ts",
         "generate-sqlviews": "npx tsx src/scripts/generate-sqlviews.ts",
-        "generate-dataset-approval": "npx tsx src/scripts/generate-dataset-approval.ts"
+        "generate-dataset-approval": "npx tsx src/scripts/generate-dataset-approval.ts",
+        "generate-mal-sqlviews": "npx tsx src/scripts/generate-mal-sqlviews.ts"
     },
     "husky": {
         "hooks": {

@@ -2,7 +2,7 @@ SELECT dataset.name                                      AS dataset,
          dataset.uid                                       AS datasetuid,
          organisationunit.uid                              AS orgunituid,
          organisationunit.name                             AS orgunit,
-         _periodstructure.<%= periodTypeColumn %>                              AS period,
+         analytics_rs_periodstructure.<%= periodTypeColumn %>                              AS period,
          categoryoptioncombo.name                          AS attribute,
          dataapprovalworkflow.uid                          AS approvalworkflowuid,
          dataapprovalworkflow.name                         AS approvalworkflow,
@@ -59,18 +59,18 @@ SELECT dataset.name                                      AS dataset,
          FROM _view_<%= viewTableName %> datavalue
          /** TODO: Filter by DEs, remove totals **/       
 WHERE  periodid in (select periodid from period where periodtypeid = (select periodtypeid from periodtype where name='<%= periodTypeName %>'))
-       and periodid in (select periodid from _periodstructure where _periodstructure.iso ~ ('^' || replace('${periods}', '-', '|') || '$'))
+       and periodid in (select periodid from analytics_rs_periodstructure where analytics_rs_periodstructure.iso ~ ('^' || replace('${periods}', '-', '|') || '$'))
       AND sourceid in ( select dss.sourceid from  datasetsource dss  where  dss.datasetid = (select datasetid from dataset where uid ~ ('^' || replace('${dataSets}', '-', '|') || '$') )) 
  and datavalue.dataelementid not in (select dataelementid from dataelement where  name='<%= submissionDataElementName %>')
 
 
         GROUP BY datavalue.periodid, datavalue.sourceid, datavalue.attributeoptioncomboid , datavalue.lastupdated, datavalue.dataelementid
  having max(datavalue.lastupdated) = datavalue.lastupdated) AS entries
-          INNER JOIN _periodstructure USING (periodid)
+          INNER JOIN analytics_rs_periodstructure USING (periodid)
           INNER JOIN organisationunit USING (organisationunitid)
-          INNER JOIN _orgunitstructure USING (organisationunitid)
+          INNER JOIN analytics_rs_orgunitstructure USING (organisationunitid)
           INNER JOIN dataapprovalworkflow USING (workflowid)
-          INNER JOIN dataapprovallevel ON (dataapprovallevel.orgunitlevel = _orgunitstructure.level)
+          INNER JOIN dataapprovallevel ON (dataapprovallevel.orgunitlevel = analytics_rs_orgunitstructure.level)
           INNER JOIN dataset USING (datasetid)
           INNER JOIN categoryoptioncombo ON (categoryoptioncombo.categoryoptioncomboid = entries.attributeoptioncomboid)
           LEFT JOIN completedatasetregistration ON ((completedatasetregistration.datasetid = entries.datasetid) AND
@@ -85,7 +85,7 @@ WHERE  periodid in (select periodid from period where periodtypeid = (select per
                                      (dataapproval.dataapprovallevelid = dataapprovallevel.dataapprovallevelid)))
 WHERE organisationunit.path ~ (replace('${orgUnitRoot}', '-', '|'))
   AND organisationunit.uid ~ ('^' || replace('${orgUnits}', '-', '|') || '$')
-  AND _periodstructure.<%= periodTypeColumn %> ~ ('^' || replace('${periods}', '-', '|') || '$')
+  AND analytics_rs_periodstructure.<%= periodTypeColumn %> ~ ('^' || replace('${periods}', '-', '|') || '$')
   AND (completedatasetregistration.completed IS NOT NULL)::text ~ ('^' || replace('${completed}', '-', '|') || '$')
   AND (dataapproval.accepted IS NOT NULL)::text ~ ('^' || replace('${approved}', '-', '|') || '$')
  ORDER BY
