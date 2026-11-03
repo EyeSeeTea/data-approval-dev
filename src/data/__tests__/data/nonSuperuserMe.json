@@ -1,0 +1,9 @@
+{
+    "id": "userId00001",
+    "displayName": "Test User",
+    "username": "test.user",
+    "organisationUnits": [],
+    "userGroups": [{ "id": "groupId0001", "name": "Test group", "code": "TEST_GROUP" }],
+    "userRoles": [{ "id": "roleId00002", "name": "Data entry role" }],
+    "authorities": ["M_test_authority"]
+}

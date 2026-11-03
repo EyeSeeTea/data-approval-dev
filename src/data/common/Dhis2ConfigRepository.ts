@@ -165,10 +165,9 @@ export class Dhis2ConfigRepository implements ConfigRepository {
                     id: true,
                     displayName: true,
                     organisationUnits: userOrgUnitFields,
-                    userCredentials: {
-                        username: true,
-                        userRoles: { id: true, name: true, authorities: true },
-                    },
+                    username: true,
+                    userRoles: { id: true, name: true },
+                    authorities: true,
                     userGroups: { id: true, name: true, code: true },
                 },
             })
@@ -183,8 +182,9 @@ export class Dhis2ConfigRepository implements ConfigRepository {
             name: d2User.displayName,
             orgUnits: orgUnits,
             userGroups: d2User.userGroups,
-            ...d2User.userCredentials,
-            isAdmin: d2User.userCredentials.userRoles.some(role => role.authorities.includes("ALL")),
+            username: d2User.username,
+            userRoles: d2User.userRoles,
+            isAdmin: d2User.authorities.includes("ALL"),
         };
     }
 }

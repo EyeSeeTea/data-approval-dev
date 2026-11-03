@@ -3,8 +3,6 @@ import { useConfig } from "@dhis2/app-runtime";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import { SnackbarProvider, LoadingProvider } from "@eyeseetea/d2-ui-components";
 import _ from "lodash";
-//@ts-ignore
-import { HeaderBar } from "@dhis2/ui";
 import OldMuiThemeProvider from "material-ui/styles/MuiThemeProvider";
 import React from "react";
 import { appConfig } from "../../../app-config";
@@ -14,6 +12,7 @@ import { D2Api } from "../../../types/d2-api";
 import { AppContext, AppContextState } from "../../contexts/app-context";
 import Report from "../../reports/Reports";
 import Share from "../share/Share";
+import { HeaderBar } from "../header-bar/HeaderBar";
 import "./App.css";
 import muiThemeLegacy from "./themes/dhis2-legacy.theme";
 import { muiTheme } from "./themes/dhis2.theme";

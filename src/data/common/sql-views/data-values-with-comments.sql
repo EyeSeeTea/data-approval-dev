@@ -64,7 +64,7 @@ from
                     datavalue.lastupdated AS lastupdated,
                     datavalue.storedby AS storedby,
                     organisationunit.name AS orgunit,
-                    _periodstructure.iso AS period
+                    analytics_rs_periodstructure.iso AS period
                 FROM
                     datavalue
                     INNER JOIN dataelement USING (dataelementid)
@@ -72,13 +72,13 @@ from
                     INNER JOIN organisationunit ON (
                         organisationunit.organisationunitid = datavalue.sourceid
                     )
-                    INNER JOIN _periodstructure USING (periodid)
+                    INNER JOIN analytics_rs_periodstructure USING (periodid)
                     INNER JOIN datasetelement USING (dataelementid)
                     INNER JOIN dataset USING (datasetid)
                 WHERE
                     dataset.uid ~ ('^' || replace('${dataSetIds}', '-', '|') || '$')
                     AND organisationunit.path ~ (replace('${orgUnitIds}', '-', '|'))
-                    AND _periodstructure.iso ~ ('^' || replace('${periods}', '-', '|') || '$')
+                    AND analytics_rs_periodstructure.iso ~ ('^' || replace('${periods}', '-', '|') || '$')
                     AND datavalue.COMMENT IS NOT NULL
                     AND datavalue.value != datavalue.comment
                 UNION
@@ -95,10 +95,10 @@ from
                     datavalue.lastupdated AS lastupdated,
                     datavalue.storedby AS storedby,
                     organisationunit.name AS orgunit,
-                    _periodstructure.iso AS period
+                    analytics_rs_periodstructure.iso AS period
                 FROM
                     datavalue AS datavalue
-                    INNER JOIN _periodstructure USING (periodid)
+                    INNER JOIN analytics_rs_periodstructure USING (periodid)
                     INNER JOIN dataelement AS dataelement USING (dataelementid)
                     INNER JOIN datavalue AS datavalueC ON datavalue.periodid = datavalueC.periodid
                     AND datavalue.sourceid = datavalueC.sourceid
@@ -143,7 +143,7 @@ from
                     )
                     INNER JOIN dataset USING (datasetid)
                 WHERE
-                    _periodstructure.iso ~ ('^' || replace('${periods}', '-', '|') || '$')
+                    analytics_rs_periodstructure.iso ~ ('^' || replace('${periods}', '-', '|') || '$')
                     AND organisationunit.path ~ (replace('${orgUnitIds}', '-', '|'))
             ) AS unionttable
     ) as t

@@ -1,0 +1,20 @@
+{
+    "dataSet": "dataSet0001",
+    "period": "202601",
+    "orgUnit": "orgUnit0001",
+    "dataValues": [
+        {
+            "dataElement": "dataElem001",
+            "period": "202601",
+            "orgUnit": "orgUnit0001",
+            "categoryOptionCombo": "coc00000001",
+            "attributeOptionCombo": "aoc00000001",
+            "value": "10",
+            "storedBy": "test.user",
+            "created": "2026-01-15T10:00:00.000",
+            "lastUpdated": "2026-01-15T10:00:00.000",
+            "comment": "Test comment",
+            "followup": false
+        }
+    ]
+}

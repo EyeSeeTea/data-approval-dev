@@ -2,7 +2,7 @@ SELECT dataset.name                                      AS dataset,
        dataset.uid                                       AS datasetuid,
        organisationunit.uid                              AS orgunituid,
        organisationunit.name                             AS orgunit,
-       _periodstructure.iso                              AS period,
+       analytics_rs_periodstructure.iso                              AS period,
        categoryoptioncombo.name                          AS attribute,
        dataapprovalworkflow.uid                          AS approvalworkflowuid,
        dataapprovalworkflow.name                         AS approvalworkflow,
@@ -25,11 +25,11 @@ FROM ((SELECT datavalue.periodid,
        )
        GROUP BY datavalue.periodid, datavalue.sourceid, datavalue.attributeoptioncomboid, dataset.datasetid,
                 dataset.workflowid) AS entries
-         INNER JOIN _periodstructure USING (periodid)
+         INNER JOIN analytics_rs_periodstructure USING (periodid)
          INNER JOIN organisationunit USING (organisationunitid)
-         INNER JOIN _orgunitstructure USING (organisationunitid)
+         INNER JOIN analytics_rs_orgunitstructure USING (organisationunitid)
          INNER JOIN dataapprovalworkflow USING (workflowid)
-         INNER JOIN dataapprovallevel ON (dataapprovallevel.orgunitlevel = _orgunitstructure.level)
+         INNER JOIN dataapprovallevel ON (dataapprovallevel.orgunitlevel = analytics_rs_orgunitstructure.level)
          INNER JOIN dataset USING (datasetid)
          INNER JOIN categoryoptioncombo ON (categoryoptioncombo.categoryoptioncomboid = entries.attributeoptioncomboid)
          LEFT JOIN completedatasetregistration ON ((completedatasetregistration.datasetid = entries.datasetid) AND
@@ -44,7 +44,7 @@ FROM ((SELECT datavalue.periodid,
                                     (dataapproval.dataapprovallevelid = dataapprovallevel.dataapprovallevelid)))
 WHERE organisationunit.path ~ (replace('${orgUnitRoot}', '-', '|'))
   AND organisationunit.uid ~ ('^' || replace('${orgUnits}', '-', '|') || '$')
-  AND _periodstructure.iso ~ ('^' || replace('${periods}', '-', '|') || '$')
+  AND analytics_rs_periodstructure.iso ~ ('^' || replace('${periods}', '-', '|') || '$')
   AND (completedatasetregistration.completed IS NOT NULL)::text ~ ('^' || replace('${completed}', '-', '|') || '$')
   AND (dataapproval.accepted IS NOT NULL)::text ~ ('^' || replace('${approved}', '-', '|') || '$')
 ORDER BY ${orderByColumn} ${orderByDirection},
