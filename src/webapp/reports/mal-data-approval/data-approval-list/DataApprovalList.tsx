@@ -40,8 +40,9 @@ const defaultSorting: TableSorting<DataApprovalViewModel> = {
     order: "asc",
 };
 
-const pageSizeOptions = [10, 20, 50];
-const defaultPagination = { page: 1, pageSize: pageSizeOptions[0] ?? 10 };
+const defaultPageSize = 50;
+const pageSizeOptions = [10, 20, defaultPageSize];
+const defaultPagination = { page: 1, pageSize: defaultPageSize };
 
 export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermissions[] }> = React.memo(
     ({ dataSetsConfig }) => {
