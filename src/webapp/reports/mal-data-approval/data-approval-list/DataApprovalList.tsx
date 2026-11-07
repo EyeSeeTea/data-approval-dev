@@ -4,6 +4,7 @@ import {
     TableConfig,
     TableGlobalAction,
     TableSorting,
+    TableState,
     useSnackbar,
 } from "@eyeseetea/d2-ui-components";
 import ClearAllIcon from "@material-ui/icons/ClearAll";
@@ -39,6 +40,9 @@ const defaultSorting: TableSorting<DataApprovalViewModel> = {
     order: "asc",
 };
 
+const pageSizeOptions = [10, 20, 50];
+const defaultPagination = { page: 1, pageSize: pageSizeOptions[0] ?? 10 };
+
 export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermissions[] }> = React.memo(
     ({ dataSetsConfig }) => {
         const { compositionRoot, config } = useAppContext();
@@ -48,8 +52,7 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
         const [__, setDiffState] = useState<string>("");
         const [oldPeriods, setOldPeriods] = useState(false);
         const [isLoading, setIsLoading] = React.useState(false);
-        const [page] = React.useState(1);
-        const [pageSize] = React.useState(50);
+        const [pagination, setPagination] = React.useState(defaultPagination);
         const [rows, setRows] = React.useState<DataApprovalViewModel[]>([]);
         const [error, setError] = React.useState<string>();
 
@@ -134,8 +137,8 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                     order: "asc" as const,
                 },
                 paginationOptions: {
-                    pageSizeOptions: [10, 20, 50],
-                    pageSizeInitialValue: 10,
+                    pageSizeOptions: pageSizeOptions,
+                    pageSizeInitialValue: defaultPagination.pageSize,
                 },
             }),
             [
@@ -173,6 +176,10 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
 
                     console.debug("Reloading", reloadKey);
                     setRows(getDataApprovalViews(objects, config.timeZoneId));
+                    // A new result set invalidates the current page: without this the
+                    // user stays on page 5 of a result that now has one page, and sees
+                    // an empty table.
+                    setPagination(prev => ({ ...prev, page: 1 }));
                     setIsLoading(false);
                     setError(undefined);
                 } catch (err) {
@@ -234,6 +241,24 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                 .value();
         }, [baseConfig.columns, visibleColumns]);
 
+        // ObjectsList treats `pagination` as controlled, which means the table keeps
+        // rendering whatever rows it is handed and never slices them itself. Paging is
+        // this component's job: slice here, and feed every change back through onChange.
+        const rowsInPage = useMemo(() => {
+            const start = (pagination.page - 1) * pagination.pageSize;
+            return rows.slice(start, start + pagination.pageSize);
+        }, [rows, pagination]);
+
+        const onTableChange = useCallback((state: TableState<DataApprovalViewModel>) => {
+            // onChange also fires on selection and sorting, so keep the same object
+            // when neither page nor size moved and avoid a pointless re-render.
+            setPagination(prev =>
+                prev.page === state.pagination.page && prev.pageSize === state.pagination.pageSize
+                    ? prev
+                    : { page: state.pagination.page, pageSize: state.pagination.pageSize }
+            );
+        }, []);
+
         const periodsToggle: TableGlobalAction = {
             name: "switchPeriods",
             text: i18n.t(oldPeriods ? "Use recent periods" : "Use old periods"),
@@ -259,10 +284,10 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                     onReorderColumns={saveReorderedColumns}
                     reload={console.debug}
                     isLoading={isLoading}
-                    onChange={console.debug}
-                    pagination={{ page: page, pageSize: pageSize, total: rows.length }}
+                    onChange={onTableChange}
+                    pagination={{ ...pagination, total: rows.length }}
                     searchBoxLabel=""
-                    rows={isLoading ? [] : rows}
+                    rows={isLoading ? [] : rowsInPage}
                 >
                     <Filters
                         oldPeriods={oldPeriods}
