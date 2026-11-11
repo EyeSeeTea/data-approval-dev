@@ -4,6 +4,7 @@ import {
     TableConfig,
     TableGlobalAction,
     TableSorting,
+    TableState,
     useSnackbar,
 } from "@eyeseetea/d2-ui-components";
 import ClearAllIcon from "@material-ui/icons/ClearAll";
@@ -33,11 +34,16 @@ import { Alert } from "../../../components/alert/Alert";
 import { getErrorMessage } from "../../../utils/errors";
 import { makeStyles } from "@material-ui/core";
 import { DataSetWithConfigPermissions } from "../../../../domain/usecases/GetApprovalConfigurationsUseCase";
+import { sortRows } from "./sortRows";
 
 const defaultSorting: TableSorting<DataApprovalViewModel> = {
     field: "dataSet",
     order: "asc",
 };
+
+const defaultPageSize = 50;
+const pageSizeOptions = [10, 20, defaultPageSize];
+const defaultPagination = { page: 1, pageSize: defaultPageSize };
 
 export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermissions[] }> = React.memo(
     ({ dataSetsConfig }) => {
@@ -48,8 +54,8 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
         const [__, setDiffState] = useState<string>("");
         const [oldPeriods, setOldPeriods] = useState(false);
         const [isLoading, setIsLoading] = React.useState(false);
-        const [page] = React.useState(1);
-        const [pageSize] = React.useState(50);
+        const [pagination, setPagination] = React.useState(defaultPagination);
+        const [sorting, setSorting] = React.useState<TableSorting<DataApprovalViewModel>>(defaultSorting);
         const [rows, setRows] = React.useState<DataApprovalViewModel[]>([]);
         const [error, setError] = React.useState<string>();
 
@@ -129,13 +135,10 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                         isActive: activeActions.isGetDifferenceActionVisible,
                     },
                 ],
-                initialSorting: {
-                    field: "dataSet" as const,
-                    order: "asc" as const,
-                },
+                initialSorting: defaultSorting,
                 paginationOptions: {
-                    pageSizeOptions: [10, 20, 50],
-                    pageSizeInitialValue: 10,
+                    pageSizeOptions: pageSizeOptions,
+                    pageSizeInitialValue: defaultPagination.pageSize,
                 },
             }),
             [
@@ -208,6 +211,11 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
             dataSetsConfig,
         ]);
 
+        const onFiltersChange = useCallback((value: React.SetStateAction<DataSetsFilter>) => {
+            setFilters(value);
+            setPagination(prev => ({ ...prev, page: 1 }));
+        }, []);
+
         const saveReorderedColumns = useCallback(
             async (columnKeys: Array<keyof DataApprovalViewModel>) => {
                 if (!visibleColumns) return;
@@ -234,13 +242,34 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                 .value();
         }, [baseConfig.columns, visibleColumns]);
 
+        const sortedRows = useMemo(() => sortRows(rows, columnsToShow, sorting), [rows, columnsToShow, sorting]);
+
+        const pageCount = Math.max(1, Math.ceil(sortedRows.length / pagination.pageSize));
+        const page = Math.min(pagination.page, pageCount);
+
+        const rowsInPage = useMemo(() => {
+            const start = (page - 1) * pagination.pageSize;
+            return sortedRows.slice(start, start + pagination.pageSize);
+        }, [sortedRows, page, pagination.pageSize]);
+
+        const onTableChange = useCallback((state: TableState<DataApprovalViewModel>) => {
+            setPagination(prev =>
+                prev.page === state.pagination.page && prev.pageSize === state.pagination.pageSize
+                    ? prev
+                    : { page: state.pagination.page, pageSize: state.pagination.pageSize }
+            );
+            setSorting(prev =>
+                prev.field === state.sorting.field && prev.order === state.sorting.order ? prev : state.sorting
+            );
+        }, []);
+
         const periodsToggle: TableGlobalAction = {
             name: "switchPeriods",
             text: i18n.t(oldPeriods ? "Use recent periods" : "Use old periods"),
             icon: <RestartAltIcon />,
             onClick: async () => {
                 setOldPeriods(oldYears => !oldYears);
-                setFilters(prev => ({ ...prev, periods: [] }));
+                onFiltersChange(prev => ({ ...prev, periods: [] }));
             },
         };
 
@@ -259,15 +288,16 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                     onReorderColumns={saveReorderedColumns}
                     reload={console.debug}
                     isLoading={isLoading}
-                    onChange={console.debug}
-                    pagination={{ page: page, pageSize: pageSize, total: rows.length }}
+                    onChange={onTableChange}
+                    sorting={sorting}
+                    pagination={{ page: page, pageSize: pagination.pageSize, total: sortedRows.length }}
                     searchBoxLabel=""
-                    rows={isLoading ? [] : rows}
+                    rows={isLoading ? [] : rowsInPage}
                 >
                     <Filters
                         oldPeriods={oldPeriods}
                         values={filters}
-                        onChange={setFilters}
+                        onChange={onFiltersChange}
                         dataSetsConfig={dataSetsConfig}
                     />
                 </ObjectsList>

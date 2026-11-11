@@ -6,6 +6,7 @@ import { useAppContext } from "../../../../contexts/app-context";
 import { Config } from "../../../../../domain/common/entities/Config";
 import { DataSetWithConfigPermissions } from "../../../../../domain/usecases/GetApprovalConfigurationsUseCase";
 import { DataSetConfigurationAction } from "../../../../../domain/entities/DataSetConfiguration";
+import { hasModifications } from "../../../../../domain/reports/mal-data-approval/entities/MalDataApprovalItem";
 
 type ActiveDataApprovalActionsState = {
     isApproveActionVisible: (rows: DataApprovalViewModel[]) => boolean;
@@ -49,7 +50,7 @@ export function useActiveDataApprovalActions(props: {
                     dataSetsConfig,
                     dataSetId: row.dataSetUid,
                 });
-                return row.lastUpdatedValue && Number(row.modificationCount) > 0 && hasAccess;
+                return row.lastUpdatedValue && hasModifications(row.modificationCount) && hasAccess;
             });
         },
         [config.currentUser, dataSetsConfig]
@@ -85,7 +86,9 @@ export function useActiveDataApprovalActions(props: {
                     dataSetsConfig,
                     dataSetId: row.dataSetUid,
                 });
-                return row.lastUpdatedValue && Number(row.modificationCount) > 0 && hasApproveAccess && hasReadAccess;
+                return (
+                    row.lastUpdatedValue && hasModifications(row.modificationCount) && hasApproveAccess && hasReadAccess
+                );
             });
         },
         [dataSetsConfig, config.currentUser]

@@ -7,6 +7,7 @@ import { OrgUnitsFilterButtonProps } from "../../../../components/org-units-filt
 import { DataSetWithConfigPermissions } from "../../../../../domain/usecases/GetApprovalConfigurationsUseCase";
 import { PeriodType } from "../../../../../domain/common/entities/DataSet";
 import { Maybe } from "../../../../../types/utils";
+import { parseModificationCountFilter } from "../../../../../domain/reports/mal-data-approval/entities/MalDataApprovalItem";
 
 type DataApprovalFilterProps = {
     values: DataSetsFilter;
@@ -81,7 +82,11 @@ export function useDataApprovalFilters(filterProps: DataApprovalFilterProps): Da
     );
 
     const setModificationCount = useCallback<SingleDropdownHandler>(
-        modificationCount => setFilterValues(prev => ({ ...prev, modificationCount: modificationCount })),
+        modificationCount =>
+            setFilterValues(prev => ({
+                ...prev,
+                modificationCount: parseModificationCountFilter(modificationCount),
+            })),
         [setFilterValues]
     );
 

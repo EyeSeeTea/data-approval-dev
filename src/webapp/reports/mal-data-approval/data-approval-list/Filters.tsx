@@ -12,6 +12,7 @@ import { OrgUnitsFilterButton } from "../../../components/org-units-filter/OrgUn
 import { DataSetWithConfigPermissions } from "../../../../domain/usecases/GetApprovalConfigurationsUseCase";
 import { DataSet, getAllowedPeriodType, PeriodType } from "../../../../domain/common/entities/DataSet";
 import { useSelectablePeriods } from "./hooks/useSelectablePeriods";
+import { ModificationCountFilter } from "../../../../domain/reports/mal-data-approval/entities/MalDataApprovalItem";
 
 type DataSetsFiltersProps = {
     values: DataSetsFilter;
@@ -27,7 +28,7 @@ export interface DataSetsFilter {
     completionStatus?: boolean;
     approvalStatus?: boolean;
     isApproved?: boolean;
-    modificationCount?: string | undefined;
+    modificationCount?: ModificationCountFilter | undefined;
 }
 
 export const Filters: React.FC<DataSetsFiltersProps> = React.memo(props => {
@@ -87,8 +88,8 @@ export const Filters: React.FC<DataSetsFiltersProps> = React.memo(props => {
 
     const countItems = useMemo(() => {
         return [
-            { value: "0", text: i18n.t("0") },
-            { value: "1", text: i18n.t("Greater than 0") },
+            { value: "none", text: i18n.t("0") },
+            { value: "some", text: i18n.t("Greater than 0") },
         ];
     }, []);
 

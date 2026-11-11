@@ -5,7 +5,7 @@ import { PaginatedObjects } from "../../../common/entities/PaginatedObjects";
 import { DataSetRepository } from "../../../common/repositories/DataSetRepository";
 import { DataValuesRepository } from "../../../common/repositories/DataValuesRepository";
 import { WmrDiffReport } from "../../WmrDiffReport";
-import { MalDataApprovalItem } from "../entities/MalDataApprovalItem";
+import { MalDataApprovalItem, matchesModificationCountFilter } from "../entities/MalDataApprovalItem";
 import { MalDataApprovalRepository, MalDataApprovalOptions } from "../repositories/MalDataApprovalRepository";
 import { UserReadableDataElementsService } from "../services/UserReadableDataElementsService";
 
@@ -64,7 +64,16 @@ export class GetMalDataSetsUseCase implements UseCase {
         const pagination = allRecords[0]?.pager;
         if (!pagination) throw new Error("No pagination information found");
 
-        return { objects: allObjects, pager: { ...pagination, total: allObjects.length } };
+        // The count shown to the user is the one recomputed above, not the `diff` column of
+        // the SQL view, so the filter can only run here. Filtering in the repository matched
+        // rows against a count the user never sees.
+        const countFilter = options.modificationCount;
+        const objects =
+            countFilter === undefined
+                ? allObjects
+                : allObjects.filter(item => matchesModificationCountFilter(item.modificationCount, countFilter));
+
+        return { objects: objects, pager: { ...pagination, total: objects.length } };
     }
 }
 

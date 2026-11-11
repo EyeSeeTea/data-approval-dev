@@ -1,4 +1,5 @@
 import { MalDataSet } from "../../../../data/reports/mal-data-approval/constants/MalDataApprovalConstants";
+import { Maybe } from "../../../../types/utils";
 
 export interface MalDataApprovalItem {
     dataSetUid: string;
@@ -43,4 +44,23 @@ export function parseDataDuplicationItemId(string: string): MalDataApprovalItemI
     if (!dataSet || !period || !orgUnit || !orgUnitCode) return undefined;
 
     return { dataSet, workflow, period, orgUnit, orgUnitCode };
+}
+
+export const modificationCountFilters = ["none", "some"] as const;
+
+export type ModificationCountFilter = typeof modificationCountFilters[number];
+
+export function parseModificationCountFilter(value: Maybe<string>): Maybe<ModificationCountFilter> {
+    return modificationCountFilters.find(filter => filter === value);
+}
+
+export function hasModifications(modificationCount: Maybe<string>): boolean {
+    return Number(modificationCount) > 0;
+}
+
+export function matchesModificationCountFilter(
+    modificationCount: Maybe<string>,
+    filter: ModificationCountFilter
+): boolean {
+    return filter === "some" ? hasModifications(modificationCount) : !hasModifications(modificationCount);
 }

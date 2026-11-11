@@ -153,7 +153,6 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
             periods,
             sorting,
             useOldPeriods,
-            modificationCount,
             dataSetsConfig,
         } = options;
         if (!dataSetId) return emptyPage;
@@ -197,14 +196,7 @@ export class MalDataApprovalDefaultRepository implements MalDataApprovalReposito
                 ? objects.filter(item => Boolean(item.lastDateOfApproval))
                 : objects.filter(item => !item.lastDateOfApproval);
 
-        const modificationCountObjects =
-            modificationCount === undefined
-                ? objectsWithApprovalFilter
-                : modificationCount === "0"
-                ? objectsWithApprovalFilter.filter(item => !item.modificationCount)
-                : objectsWithApprovalFilter.filter(item => Boolean(item.modificationCount));
-
-        const objectsInPage = await promiseMap(modificationCountObjects, async item => {
+        const objectsInPage = await promiseMap(objectsWithApprovalFilter, async item => {
             const { approved } = await this.getDataApprovalStatus(item);
 
             return { ...item, approved: approved };

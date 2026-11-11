@@ -1,7 +1,11 @@
 import { Id } from "../../../common/entities/Base";
 import { Config } from "../../../common/entities/Config";
 import { PaginatedObjects, Paging, Sorting } from "../../../common/entities/PaginatedObjects";
-import { MalDataApprovalItem, MalDataApprovalItemIdentifier } from "../entities/MalDataApprovalItem";
+import {
+    MalDataApprovalItem,
+    MalDataApprovalItemIdentifier,
+    ModificationCountFilter,
+} from "../entities/MalDataApprovalItem";
 import { DataDiffItemIdentifier } from "../entities/DataDiffItem";
 import { DataValueStats } from "../../../common/entities/DataValueStats";
 import { Log } from "../usecases/UpdateMalApprovalStatusUseCase";
@@ -52,6 +56,6 @@ export interface MalDataApprovalOptions {
     approvalStatus?: boolean;
     completionStatus?: boolean;
     isApproved?: boolean;
-    modificationCount?: string | undefined;
+    modificationCount?: ModificationCountFilter | undefined;
     dataSetsConfig: DataSetWithConfigPermissions[];
 }
