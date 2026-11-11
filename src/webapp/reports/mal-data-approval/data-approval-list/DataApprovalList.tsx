@@ -34,6 +34,7 @@ import { Alert } from "../../../components/alert/Alert";
 import { getErrorMessage } from "../../../utils/errors";
 import { makeStyles } from "@material-ui/core";
 import { DataSetWithConfigPermissions } from "../../../../domain/usecases/GetApprovalConfigurationsUseCase";
+import { sortRows } from "./sortRows";
 
 const defaultSorting: TableSorting<DataApprovalViewModel> = {
     field: "dataSet",
@@ -54,6 +55,7 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
         const [oldPeriods, setOldPeriods] = useState(false);
         const [isLoading, setIsLoading] = React.useState(false);
         const [pagination, setPagination] = React.useState(defaultPagination);
+        const [sorting, setSorting] = React.useState<TableSorting<DataApprovalViewModel>>(defaultSorting);
         const [rows, setRows] = React.useState<DataApprovalViewModel[]>([]);
         const [error, setError] = React.useState<string>();
 
@@ -133,10 +135,7 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                         isActive: activeActions.isGetDifferenceActionVisible,
                     },
                 ],
-                initialSorting: {
-                    field: "dataSet" as const,
-                    order: "asc" as const,
-                },
+                initialSorting: defaultSorting,
                 paginationOptions: {
                     pageSizeOptions: pageSizeOptions,
                     pageSizeInitialValue: defaultPagination.pageSize,
@@ -177,10 +176,6 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
 
                     console.debug("Reloading", reloadKey);
                     setRows(getDataApprovalViews(objects, config.timeZoneId));
-                    // A new result set invalidates the current page: without this the
-                    // user stays on page 5 of a result that now has one page, and sees
-                    // an empty table.
-                    setPagination(prev => ({ ...prev, page: 1 }));
                     setIsLoading(false);
                     setError(undefined);
                 } catch (err) {
@@ -216,6 +211,11 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
             dataSetsConfig,
         ]);
 
+        const onFiltersChange = useCallback((value: React.SetStateAction<DataSetsFilter>) => {
+            setFilters(value);
+            setPagination(prev => ({ ...prev, page: 1 }));
+        }, []);
+
         const saveReorderedColumns = useCallback(
             async (columnKeys: Array<keyof DataApprovalViewModel>) => {
                 if (!visibleColumns) return;
@@ -242,21 +242,24 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                 .value();
         }, [baseConfig.columns, visibleColumns]);
 
-        // ObjectsList treats `pagination` as controlled, which means the table keeps
-        // rendering whatever rows it is handed and never slices them itself. Paging is
-        // this component's job: slice here, and feed every change back through onChange.
+        const sortedRows = useMemo(() => sortRows(rows, columnsToShow, sorting), [rows, columnsToShow, sorting]);
+
+        const pageCount = Math.max(1, Math.ceil(sortedRows.length / pagination.pageSize));
+        const page = Math.min(pagination.page, pageCount);
+
         const rowsInPage = useMemo(() => {
-            const start = (pagination.page - 1) * pagination.pageSize;
-            return rows.slice(start, start + pagination.pageSize);
-        }, [rows, pagination]);
+            const start = (page - 1) * pagination.pageSize;
+            return sortedRows.slice(start, start + pagination.pageSize);
+        }, [sortedRows, page, pagination.pageSize]);
 
         const onTableChange = useCallback((state: TableState<DataApprovalViewModel>) => {
-            // onChange also fires on selection and sorting, so keep the same object
-            // when neither page nor size moved and avoid a pointless re-render.
             setPagination(prev =>
                 prev.page === state.pagination.page && prev.pageSize === state.pagination.pageSize
                     ? prev
                     : { page: state.pagination.page, pageSize: state.pagination.pageSize }
+            );
+            setSorting(prev =>
+                prev.field === state.sorting.field && prev.order === state.sorting.order ? prev : state.sorting
             );
         }, []);
 
@@ -266,7 +269,7 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
             icon: <RestartAltIcon />,
             onClick: async () => {
                 setOldPeriods(oldYears => !oldYears);
-                setFilters(prev => ({ ...prev, periods: [] }));
+                onFiltersChange(prev => ({ ...prev, periods: [] }));
             },
         };
 
@@ -286,14 +289,15 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                     reload={console.debug}
                     isLoading={isLoading}
                     onChange={onTableChange}
-                    pagination={{ ...pagination, total: rows.length }}
+                    sorting={sorting}
+                    pagination={{ page: page, pageSize: pagination.pageSize, total: sortedRows.length }}
                     searchBoxLabel=""
                     rows={isLoading ? [] : rowsInPage}
                 >
                     <Filters
                         oldPeriods={oldPeriods}
                         values={filters}
-                        onChange={setFilters}
+                        onChange={onFiltersChange}
                         dataSetsConfig={dataSetsConfig}
                     />
                 </ObjectsList>
