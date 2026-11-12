@@ -5,8 +5,8 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"POT-Creation-Date: 2026-11-12T06:46:53.931Z\n"
-"PO-Revision-Date: 2026-11-12T06:46:53.932Z\n"
+"POT-Creation-Date: 2026-11-12T12:13:54.173Z\n"
+"PO-Revision-Date: 2026-11-12T12:13:54.173Z\n"
 
 msgid "0"
 msgstr ""
@@ -202,14 +202,6 @@ msgstr ""
 msgid "Check Difference"
 msgstr ""
 
-msgid ""
-"The list could not be loaded because analytics jobs are currently running. "
-"Please try again in a few seconds by clicking 'Apply Filters'."
-msgstr ""
-
-msgid "The list could not be loaded. {{message}}"
-msgstr ""
-
 msgid "Check differences"
 msgstr ""
 
@@ -298,6 +290,14 @@ msgid "Last date of submission"
 msgstr ""
 
 msgid "Last date of approval"
+msgstr ""
+
+msgid "The list could not be loaded. {{message}}"
+msgstr ""
+
+msgid ""
+"The list could not be loaded because analytics jobs are currently running. "
+"Please try again in a few seconds by clicking 'Apply Filters'."
 msgstr ""
 
 msgid "Malaria Data Subscription Report"

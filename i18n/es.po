@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: i18next-conv\n"
-"POT-Creation-Date: 2026-11-12T06:46:53.931Z\n"
+"POT-Creation-Date: 2026-11-12T12:13:54.173Z\n"
 "PO-Revision-Date: 2018-10-25T09:02:35.143Z\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -202,14 +202,6 @@ msgstr ""
 msgid "Check Difference"
 msgstr ""
 
-msgid ""
-"The list could not be loaded because analytics jobs are currently running. "
-"Please try again in a few seconds by clicking 'Apply Filters'."
-msgstr ""
-
-msgid "The list could not be loaded. {{message}}"
-msgstr ""
-
 msgid "Check differences"
 msgstr ""
 
@@ -298,6 +290,14 @@ msgid "Last date of submission"
 msgstr ""
 
 msgid "Last date of approval"
+msgstr ""
+
+msgid "The list could not be loaded. {{message}}"
+msgstr ""
+
+msgid ""
+"The list could not be loaded because analytics jobs are currently running. "
+"Please try again in a few seconds by clicking 'Apply Filters'."
 msgstr ""
 
 msgid "Malaria Data Subscription Report"
