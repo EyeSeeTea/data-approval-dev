@@ -5,7 +5,7 @@ import { useAppContext } from "../../../../contexts/app-context";
 import { DataSetsFilter } from "../Filters";
 import { OrgUnitsFilterButtonProps } from "../../../../components/org-units-filter/OrgUnitsFilterButton";
 import { DataSetWithConfigPermissions } from "../../../../../domain/usecases/GetApprovalConfigurationsUseCase";
-import { PeriodType } from "../../../../../domain/common/entities/DataSet";
+import { getDataSetIdsForPeriodType, PeriodType } from "../../../../../domain/common/entities/DataSet";
 import { Maybe } from "../../../../../types/utils";
 import { parseModificationCountFilter } from "../../../../../domain/reports/mal-data-approval/entities/MalDataApprovalItem";
 
@@ -42,10 +42,17 @@ export function useDataApprovalFilters(filterProps: DataApprovalFilterProps): Da
               .compact()
               .value()
         : [];
-    const initialDataSetIds = filterProps.dataSetsConfig.map(ds => ds.dataSet.id);
     const { onChange } = filterProps;
 
-    const [filterValues, setFilterValues] = useState({ ...emptyApprovalFilter, dataSetIds: initialDataSetIds });
+    // Start with the data sets of the selected period type only. Selecting every data set mixed
+    // period types, so the periods and results followed whichever data set happened to be first.
+    const [filterValues, setFilterValues] = useState<DataSetsFilter>(() => ({
+        ...emptyApprovalFilter,
+        dataSetIds: getDataSetIdsForPeriodType(
+            filterProps.dataSetsConfig.map(ds => ds.dataSet),
+            filterProps.periodType
+        ),
+    }));
 
     const dataSetOrgUnits = allDataSets.flatMap(ds => ds.organisationUnits);
 

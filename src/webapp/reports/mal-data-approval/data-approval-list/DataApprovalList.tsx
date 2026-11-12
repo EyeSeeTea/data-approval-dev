@@ -31,7 +31,7 @@ import { useActiveDataApprovalActions } from "./hooks/useActiveDataApprovalActio
 import { useDataApprovalActions } from "./hooks/useDataApprovalActions";
 import { useSelectablePeriods } from "./hooks/useSelectablePeriods";
 import { Alert } from "../../../components/alert/Alert";
-import { getErrorMessage } from "../../../utils/errors";
+import { getErrorMessage, isAnalyticsTableMissingError } from "../../../utils/errors";
 import { makeStyles } from "@material-ui/core";
 import { DataSetWithConfigPermissions } from "../../../../domain/usecases/GetApprovalConfigurationsUseCase";
 import { sortRows } from "./sortRows";
@@ -183,10 +183,14 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
 
                     console.error(err);
                     setError(
-                        i18n.t("The list could not be loaded. {{message}}", {
-                            message: getErrorMessage(err),
-                            interpolation: { escapeValue: false },
-                        })
+                        isAnalyticsTableMissingError(err)
+                            ? i18n.t(
+                                  "The list could not be loaded because analytics jobs are currently running. Please try again in a few seconds by clicking 'Apply Filters'."
+                              )
+                            : i18n.t("The list could not be loaded. {{message}}", {
+                                  message: getErrorMessage(err),
+                                  interpolation: { escapeValue: false },
+                              })
                     );
                     setRows([]);
                 } finally {
