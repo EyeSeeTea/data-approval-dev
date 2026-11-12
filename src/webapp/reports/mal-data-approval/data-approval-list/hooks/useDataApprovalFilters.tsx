@@ -5,7 +5,7 @@ import { useAppContext } from "../../../../contexts/app-context";
 import { DataSetsFilter } from "../Filters";
 import { OrgUnitsFilterButtonProps } from "../../../../components/org-units-filter/OrgUnitsFilterButton";
 import { DataSetWithConfigPermissions } from "../../../../../domain/usecases/GetApprovalConfigurationsUseCase";
-import { PeriodType } from "../../../../../domain/common/entities/DataSet";
+import { getDataSetIdsForPeriodType, PeriodType } from "../../../../../domain/common/entities/DataSet";
 import { Maybe } from "../../../../../types/utils";
 import { parseModificationCountFilter } from "../../../../../domain/reports/mal-data-approval/entities/MalDataApprovalItem";
 
@@ -42,10 +42,11 @@ export function useDataApprovalFilters(filterProps: DataApprovalFilterProps): Da
               .compact()
               .value()
         : [];
-    const initialDataSetIds = filterProps.dataSetsConfig.map(ds => ds.dataSet.id);
-    const { onChange } = filterProps;
+    const { onChange, dataSetsConfig, periodType } = filterProps;
 
-    const [filterValues, setFilterValues] = useState({ ...emptyApprovalFilter, dataSetIds: initialDataSetIds });
+    const [filterValues, setFilterValues] = useState<DataSetsFilter>(() =>
+        getInitialFilter(dataSetsConfig, periodType)
+    );
 
     const dataSetOrgUnits = allDataSets.flatMap(ds => ds.organisationUnits);
 
@@ -100,9 +101,10 @@ export function useDataApprovalFilters(filterProps: DataApprovalFilterProps): Da
     }, [filterValues, onChange]);
 
     const clearFilters = useCallback(() => {
-        onChange(emptyApprovalFilter);
-        setFilterValues(emptyApprovalFilter);
-    }, [onChange]);
+        const initialFilter = getInitialFilter(dataSetsConfig, periodType);
+        onChange(initialFilter);
+        setFilterValues(initialFilter);
+    }, [onChange, dataSetsConfig, periodType]);
 
     return {
         filterValues: filterValues,
@@ -130,6 +132,21 @@ export const emptyApprovalFilter: DataSetsFilter = {
     completionStatus: undefined,
     approvalStatus: undefined,
 };
+
+// The first load and "Clear" start with the data sets of the selected period type only. Selecting
+// every data set mixed period types, so the periods and results followed whichever data set came first.
+function getInitialFilter(
+    dataSetsConfig: ReadonlyArray<DataSetWithConfigPermissions>,
+    periodType: Maybe<PeriodType>
+): DataSetsFilter {
+    return {
+        ...emptyApprovalFilter,
+        dataSetIds: getDataSetIdsForPeriodType(
+            dataSetsConfig.map(ds => ds.dataSet),
+            periodType
+        ),
+    };
+}
 
 function toBool(s: string | undefined): boolean | undefined {
     return s === undefined ? undefined : s === "true";

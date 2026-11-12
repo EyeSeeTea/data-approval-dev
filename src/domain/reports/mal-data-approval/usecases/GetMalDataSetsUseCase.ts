@@ -20,7 +20,8 @@ export class GetMalDataSetsUseCase implements UseCase {
     ) {}
 
     async execute(options: DataSetsOptions): Promise<PaginatedObjects<MalDataApprovalItem>> {
-        if (options.dataSetIds.length === 0)
+        // The SQL views fail without at least one org unit, so there is nothing to query.
+        if (options.dataSetIds.length === 0 || options.orgUnitIds.length === 0)
             return Promise.resolve({ objects: [], pager: { page: 0, pageCount: 0, pageSize: 0, total: 0 } });
 
         const isCurrentUserSuperAdmin = await this.userReadableDataElementsService.isCurrentUserSuperAdmin();

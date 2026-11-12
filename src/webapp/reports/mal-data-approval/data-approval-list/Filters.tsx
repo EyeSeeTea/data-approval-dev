@@ -1,4 +1,3 @@
-import _ from "../../../../domain/generic/Collection";
 import { Dropdown } from "@eyeseetea/d2-ui-components";
 import React, { useCallback, useMemo } from "react";
 import styled from "styled-components";
@@ -10,7 +9,13 @@ import { Button } from "@material-ui/core";
 import { useDataApprovalFilters } from "./hooks/useDataApprovalFilters";
 import { OrgUnitsFilterButton } from "../../../components/org-units-filter/OrgUnitsFilterButton";
 import { DataSetWithConfigPermissions } from "../../../../domain/usecases/GetApprovalConfigurationsUseCase";
-import { DataSet, getAllowedPeriodType, PeriodType } from "../../../../domain/common/entities/DataSet";
+import {
+    DataSet,
+    getAllowedPeriodType,
+    getDataSetIdsForPeriodType,
+    getDistinctPeriodTypes,
+    PeriodType,
+} from "../../../../domain/common/entities/DataSet";
 import { useSelectablePeriods } from "./hooks/useSelectablePeriods";
 import { ModificationCountFilter } from "../../../../domain/reports/mal-data-approval/entities/MalDataApprovalItem";
 
@@ -43,14 +48,12 @@ export const Filters: React.FC<DataSetsFiltersProps> = React.memo(props => {
     const { filterValues, rootIds, selectableIds, setFilterValues, applyFilters, clearFilters } =
         useDataApprovalFilters({ ...props, periodType });
 
-    const allPeriodTypes = _(dataSetsConfig)
-        .compactMap(dsConfig => {
-            return dsConfig.dataSet.periodType
-                ? { value: dsConfig.dataSet.periodType, text: dsConfig.dataSet.periodType }
-                : undefined;
-        })
-        .uniq()
-        .value();
+    const allPeriodTypes = useMemo(() => {
+        return getDistinctPeriodTypes(dataSetsConfig.map(dsConfig => dsConfig.dataSet)).map(periodType => ({
+            value: periodType,
+            text: periodType,
+        }));
+    }, [dataSetsConfig]);
 
     const currentDataSets = dataSetsConfig
         .filter(dsConfig => dsConfig.dataSet.periodType === periodType)
@@ -98,16 +101,19 @@ export const Filters: React.FC<DataSetsFiltersProps> = React.memo(props => {
             const periodTypeValue = getAllowedPeriodType(value ?? "");
             setPeriodType(periodTypeValue);
 
-            const dataSetIdsForPeriod = dataSetsConfig
-                .filter(dsConfig => dsConfig.dataSet.periodType === periodTypeValue)
-                .map(ds => ds.dataSet.id);
-
-            setFilterValues.dataSetId(dataSetIdsForPeriod);
+            setFilterValues.dataSetId(
+                getDataSetIdsForPeriodType(
+                    dataSetsConfig.map(dsConfig => dsConfig.dataSet),
+                    periodTypeValue
+                )
+            );
         },
         [dataSetsConfig, setFilterValues]
     );
 
     const isPeriodTypeSelected = Boolean(periodType) || allPeriodTypes.length <= 1;
+    // The SQL views need at least one org unit: with none, the query fails instead of returning nothing.
+    const hasOrgUnits = filterValues.orgUnitPaths.length > 0;
 
     return (
         <>
@@ -180,7 +186,14 @@ export const Filters: React.FC<DataSetsFiltersProps> = React.memo(props => {
 
             {isPeriodTypeSelected && (
                 <FilterButtonContainer>
-                    <Button onClick={applyFilters} disabled={!periodType} variant="contained" color="primary">
+                    {!hasOrgUnits && <Hint>{i18n.t("Select at least one organisation unit")}</Hint>}
+
+                    <Button
+                        onClick={applyFilters}
+                        disabled={!periodType || !hasOrgUnits}
+                        variant="contained"
+                        color="primary"
+                    >
                         {i18n.t("Apply filters")}
                     </Button>
 
@@ -229,7 +242,13 @@ const FilterButtonContainer = styled.div`
     display: flex;
     gap: 1rem;
     justify-content: end;
+    align-items: center;
     width: 100%;
+`;
+
+const Hint = styled.span`
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.875rem;
 `;
 
 function fromBool(value: boolean | undefined): string | undefined {

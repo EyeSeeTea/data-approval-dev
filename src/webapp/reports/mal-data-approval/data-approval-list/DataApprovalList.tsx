@@ -31,7 +31,8 @@ import { useActiveDataApprovalActions } from "./hooks/useActiveDataApprovalActio
 import { useDataApprovalActions } from "./hooks/useDataApprovalActions";
 import { useSelectablePeriods } from "./hooks/useSelectablePeriods";
 import { Alert } from "../../../components/alert/Alert";
-import { getErrorMessage } from "../../../utils/errors";
+import { useListLoadError } from "./hooks/useListLoadError";
+import { Cancel } from "../../../../domain/generic/Future";
 import { makeStyles } from "@material-ui/core";
 import { DataSetWithConfigPermissions } from "../../../../domain/usecases/GetApprovalConfigurationsUseCase";
 import { sortRows } from "./sortRows";
@@ -57,7 +58,7 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
         const [pagination, setPagination] = React.useState(defaultPagination);
         const [sorting, setSorting] = React.useState<TableSorting<DataApprovalViewModel>>(defaultSorting);
         const [rows, setRows] = React.useState<DataApprovalViewModel[]>([]);
-        const [error, setError] = React.useState<string>();
+        const { error, showLoadError, clearError } = useListLoadError();
 
         const classes = useStyles();
 
@@ -160,6 +161,7 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
 
         React.useEffect(() => {
             let isCancelled = false;
+            let cancelErrorCheck: Cancel;
             async function getData() {
                 setIsLoading(true);
                 try {
@@ -177,17 +179,12 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
                     console.debug("Reloading", reloadKey);
                     setRows(getDataApprovalViews(objects, config.timeZoneId));
                     setIsLoading(false);
-                    setError(undefined);
+                    clearError();
                 } catch (err) {
                     if (isCancelled) return;
 
                     console.error(err);
-                    setError(
-                        i18n.t("The list could not be loaded. {{message}}", {
-                            message: getErrorMessage(err),
-                            interpolation: { escapeValue: false },
-                        })
-                    );
+                    cancelErrorCheck = showLoadError(err);
                     setRows([]);
                 } finally {
                     if (!isCancelled) {
@@ -200,9 +197,12 @@ export const DataApprovalList: React.FC<{ dataSetsConfig: DataSetWithConfigPermi
 
             return () => {
                 isCancelled = true;
+                cancelErrorCheck?.();
             };
         }, [
             compositionRoot.malDataApproval,
+            showLoadError,
+            clearError,
             config,
             oldPeriods,
             filters,

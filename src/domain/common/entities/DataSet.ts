@@ -38,3 +38,17 @@ export type PeriodType = typeof periodTypes[number];
 export const getAllowedPeriodType = (value: string): Maybe<PeriodType> => {
     return periodTypes.find(pt => pt === value);
 };
+
+/** Each period type once, in the order the data sets first use it. */
+export function getDistinctPeriodTypes(dataSets: Pick<DataSet, "periodType">[]): PeriodType[] {
+    return dataSets.reduce<PeriodType[]>((acc, { periodType }) => {
+        return periodType && !acc.includes(periodType) ? [...acc, periodType] : acc;
+    }, []);
+}
+
+export function getDataSetIdsForPeriodType(
+    dataSets: Pick<DataSet, "id" | "periodType">[],
+    periodType: Maybe<PeriodType>
+): Id[] {
+    return dataSets.filter(dataSet => dataSet.periodType === periodType).map(dataSet => dataSet.id);
+}

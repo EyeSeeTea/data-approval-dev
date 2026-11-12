@@ -49,6 +49,8 @@ import { GetApprovalConfigurationsUseCase } from "./domain/usecases/GetApprovalC
 import { RemoveDataSetConfigurationUseCase } from "./domain/usecases/RemoveDataSetConfigurationUseCase";
 import { DataElementGroupD2Repository } from "./data/reports/mal-data-approval/DataElementGroupD2Repository";
 import { UserReadableDataElementsService } from "./domain/reports/mal-data-approval/services/UserReadableDataElementsService";
+import { AnalyticsJobD2Repository } from "./data/common/AnalyticsJobD2Repository";
+import { GetRunningAnalyticsJobsUseCase } from "./domain/common/usecases/GetRunningAnalyticsJobsUseCase";
 
 export function getCompositionRoot(api: D2Api) {
     const configRepository = new Dhis2ConfigRepository(api);
@@ -66,6 +68,7 @@ export function getCompositionRoot(api: D2Api) {
     const userSharingRepository = new UserSharingD2Repository(api);
     const metadataEntityRepository = new MetadataEntityD2Repository(api);
     const dataElementGroupRepository = new DataElementGroupD2Repository(api);
+    const analyticsJobRepository = new AnalyticsJobD2Repository(api);
     const userReadableDataElementsService = new UserReadableDataElementsService(
         userRepository,
         dataElementGroupRepository
@@ -146,6 +149,9 @@ export function getCompositionRoot(api: D2Api) {
         config: getExecute({
             get: new GetConfig(configRepository),
         }),
+        analyticsJobs: {
+            getRunning: new GetRunningAnalyticsJobsUseCase({ analyticsJobRepository }),
+        },
     };
 }
 
