@@ -22,13 +22,13 @@ async function main() {
     parser.add_argument("-u", "--user-auth", {
         help: "DHIS2 authentication",
         metavar: "USERNAME:PASSWORD",
-        default: process.env.REACT_APP_DHIS2_AUTH,
+        default: process.env.VITE_DHIS2_AUTH,
     });
 
     parser.add_argument("--url", {
         help: "DHIS2 base URL",
         metavar: "URL",
-        default: process.env.REACT_APP_DHIS2_BASE_URL,
+        default: process.env.VITE_DHIS2_BASE_URL,
     });
 
     try {

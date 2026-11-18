@@ -18,11 +18,23 @@ See the [user guide](docs/data-approval-user-guide.md) for the full end-user doc
 $ yarn install
 ```
 
+This project uses **Yarn 4** managed by **Corepack** and declares `"packageManager": "yarn@4.15.0"` (the Yarn release is committed in `.yarn/releases`).
+
+If running `yarn` fails with a `packageManager` error because you have Yarn 1 installed globally:
+
+```bash
+npm uninstall -g yarn      # optional but recommended
+corepack enable            # shipped with Node >= 16.9
+corepack prepare yarn@1.22.22 --activate   # default for projects WITHOUT packageManager
+```
+
+Then, inside this repo, `yarn --version` should print `4.15.0`.
+
 Most tasks in this repo — the dev server, the build, and the setup scripts — read DHIS2 credentials from environment variables. Create a `.env.local` file at the repo root:
 
 ```
-REACT_APP_DHIS2_BASE_URL=http://localhost:8080
-REACT_APP_DHIS2_AUTH=admin:district
+VITE_DHIS2_BASE_URL=http://localhost:8080
+VITE_DHIS2_AUTH=admin:district
 ```
 
 ## Development
@@ -30,7 +42,7 @@ REACT_APP_DHIS2_AUTH=admin:district
 Start the development server at `http://localhost:8082` using `https://play.dhis2.org/2.34` as a backend:
 
 ```
-$ PORT=8082 REACT_APP_DHIS2_BASE_URL="https://play.dhis2.org/2.34" yarn start
+$ PORT=8082 VITE_DHIS2_BASE_URL="https://play.dhis2.org/2.34" yarn start
 ```
 
 ## Building the app
@@ -55,7 +67,7 @@ The approval list also needs the `MAL Data approval header` SQL view, which list
 
 Typical end-to-end flow for a fresh dataset:
 
-1.  Populate `.env.local` with `REACT_APP_DHIS2_BASE_URL` and `REACT_APP_DHIS2_AUTH`.
+1.  Populate `.env.local` with `VITE_DHIS2_BASE_URL` and `VITE_DHIS2_AUTH`.
 2.  Only once per instance: run `yarn run generate-mal-sqlviews` **without** `--post` to validate the shared header SQL view, then re-run **with** `--post` to commit it.
 3.  Run `yarn run generate-dataset-approval` **without** `--post` to preview the APVD dataset that would be created, then re-run **with** `--post` to commit it.
 4.  Run `yarn run generate-sqlviews --persist dhis` to create the current-periods and old-periods SQL views in the instance (and a default `DataSetConfiguration`).
@@ -69,8 +81,8 @@ Script to generate necessary sqlViews for dataSets and create a DataSetConfigura
 If you want to persist the sqlViews and configuration to DHIS2 please configure the following variables in your `.env.local` file:
 
 ```
-REACT_APP_DHIS2_BASE_URL=http://localhost:8080
-REACT_APP_DHIS2_AUTH='admin:district'
+VITE_DHIS2_BASE_URL=http://localhost:8080
+VITE_DHIS2_AUTH='admin:district'
 ```
 
 Run the script:
@@ -103,8 +115,8 @@ Script to clone an existing DataSet and its DataElements with the `-APVD` suffix
 Make sure the following variables are configured in your `.env.local` file:
 
 ```
-REACT_APP_DHIS2_BASE_URL=http://localhost:8080
-REACT_APP_DHIS2_AUTH='admin:district'
+VITE_DHIS2_BASE_URL=http://localhost:8080
+VITE_DHIS2_AUTH='admin:district'
 ```
 
 Run the script:
@@ -138,8 +150,8 @@ Script to create or update the `MAL Data approval header` SQL view from `src/dat
 Make sure the following variables are configured in your `.env.local` file:
 
 ```
-REACT_APP_DHIS2_BASE_URL=http://localhost:8080
-REACT_APP_DHIS2_AUTH='admin:district'
+VITE_DHIS2_BASE_URL=http://localhost:8080
+VITE_DHIS2_AUTH='admin:district'
 ```
 
 Run the script:

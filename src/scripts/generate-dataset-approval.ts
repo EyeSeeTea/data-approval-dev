@@ -39,8 +39,8 @@ async function main() {
 
     try {
         const args = parser.parse_args();
-        const baseUrl = process.env.REACT_APP_DHIS2_BASE_URL || "";
-        const authString = process.env.REACT_APP_DHIS2_AUTH || "";
+        const baseUrl = process.env.VITE_DHIS2_BASE_URL || "";
+        const authString = process.env.VITE_DHIS2_AUTH || "";
 
         const [username, password] = authString.split(":", 2);
         if (!username || !password) throw new Error("Invalid DHIS2 authentication");
