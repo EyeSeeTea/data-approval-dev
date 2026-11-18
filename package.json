@@ -62,6 +62,7 @@
         "extract-pot": "yarn d2-i18n-extract -p src/ -o i18n/",
         "localize": "yarn update-po && d2-i18n-generate -n data-approval-dev -p ./i18n/ -o ./src/locales/",
         "update-po": "yarn extract-pot && find i18n/ -name '*.po' -exec msgmerge --backup=off -U {} i18n/en.pot \\;",
+        "postinstall": "yarn localize",
         "prepare": "corepack enable 2>/dev/null || true && husky install",
         "manifest": "d2-manifest package.json build/manifest.webapp",
         "approve-mal-datavalues": "tsx src/scripts/approve-mal-datavalues.ts",
