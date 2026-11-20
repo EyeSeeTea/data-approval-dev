@@ -165,7 +165,7 @@ Recorded here rather than in `resolutions` because **no version resolves them**.
 
 - **Chain:** `@dhis2/cli-app-scripts` → `@dhis2/cli-helpers-engine@3.2.2` → `request@2.88.2` → `uuid@^3.3.2`.
 - **Why it cannot be fixed:** the advisory is patched at 11.1.1, but `request` imports the `uuid/v4` subpath, which was removed in uuid 7.
-- **Impact:** build tooling only; the missing bounds check is in `v3()`, `v5()` and `v6()` with a caller-supplied buffer. GitHub rates it medium; Dependency-Track may rate it high. ⚠️ **If the CI gate blocks on it, it needs an approved dismissal; not yet requested.**
+- **Impact:** build tooling only; the missing bounds check is in `v3()`, `v5()` and `v6()` with a caller-supplied buffer. GitHub rates it medium; Dependency-Track may rate it high. ⚠️ **Dependency-Track alert [#226](https://github.com/EyeSeeTea/data-approval-dev/security/code-scanning/226) is high and blocks the gate: it needs an approved dismissal, not yet requested.**
 - **Drop when:** `request` leaves the tree.
 
 #### `request@2.88.2`: GHSA-p8p7-x288-28g6
@@ -195,3 +195,20 @@ Recorded here rather than in `resolutions` because **no version resolves them**.
 - **Why it is not fixed here:** both are fixed only on a new major (`glob@14.0.2`, `minimatch@11.0.1`), and no released parent requests them. Forcing a major on parents that never tested it is the pattern that breaks consumers.
 - **Impact:** build tooling only. The `minimatch` advisory needs an attacker-supplied pattern; every pattern here comes from the repository's own configuration.
 - **Drop when:** each parent requests the patched major.
+
+---
+
+## Withdrawn advisories still reported by Dependency-Track
+
+GitHub has withdrawn these advisories (`withdrawn_at` in the advisory), but Dependency-Track kept reporting them on this branch on 2026-11-20. No change to the tree removes them: the affected range covers every published version, or the package is not at fault. They are dismissal candidates ("false positive / withdrawn"); none is dismissed yet.
+
+| Alert | Package | Advisory | Withdrawn | Why nothing in the tree removes it |
+| --- | --- | --- | --- | --- |
+| [#17](https://github.com/EyeSeeTea/data-approval-dev/security/code-scanning/17), [#36](https://github.com/EyeSeeTea/data-approval-dev/security/code-scanning/36) | `picomatch@4.0.7`, `picomatch@2.3.2` | GHSA-fc5q-39xc-vjpf (high) | 2026-11-18 | range `<= 4.0.7`; 4.0.7 is the latest release |
+| [#61](https://github.com/EyeSeeTea/data-approval-dev/security/code-scanning/61) | `braces@3.0.3` | GHSA-vfj7-8cjw-p6xm (high) | 2026-10-23 | range `<= 3.0.3`; 3.0.3 is the latest release |
+| [#27](https://github.com/EyeSeeTea/data-approval-dev/security/code-scanning/27) | `sprintf-js@1.0.3` | GHSA-hp3w-g68c-fv3c (medium) | 2026-10-22 | range `<= 1.1.3`, no patched version |
+| [#45](https://github.com/EyeSeeTea/data-approval-dev/security/code-scanning/45) | `deepmerge@4.3.1` | GHSA-gcqx-w48m-w2h4 (low) | 2026-11-16 | range `>= 4.2.0, <= 4.3.1`, no patched version |
+| [#47](https://github.com/EyeSeeTea/data-approval-dev/security/code-scanning/47) | `eslint@8.2.0` | GHSA-p5wg-g6qr-c7cg (medium) | 2026-02-03 | patched in 9.26.0 only; the project is on ESLint 8 and the upgrade is a toolchain change outside this round. The advisory is withdrawn anyway |
+
+**Drop when:** Dependency-Track stops reporting them.
+
