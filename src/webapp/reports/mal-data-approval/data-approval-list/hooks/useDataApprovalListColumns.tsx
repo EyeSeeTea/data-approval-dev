@@ -21,7 +21,9 @@ export function useDataApprovalListColumns() {
         return [
             { name: "dataSet", text: i18n.t("Data set"), hidden: false },
             { name: "orgUnit", text: i18n.t("Organisation unit") },
-            { name: "period", text: i18n.t("Period") },
+            // Return the period as is: the table formats strings that moment parses as an ISO date,
+            // and moment >= 2.29 reads "202609" as 2026-09-01.
+            { name: "period", text: i18n.t("Period"), getValue: row => row.period },
             { name: "attribute", text: i18n.t("Attribute"), hidden: true },
             {
                 name: "completed",
