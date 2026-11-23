@@ -164,8 +164,11 @@ Recorded here rather than in `resolutions` because **no version resolves them**.
 #### `uuid@3.4.0`: GHSA-w5hq-g745-h8pq
 
 - **Chain:** `@dhis2/cli-app-scripts` → `@dhis2/cli-helpers-engine@3.2.2` → `request@2.88.2` → `uuid@^3.3.2`.
-- **Why it cannot be fixed:** the advisory is patched at 11.1.1, but `request` imports the `uuid/v4` subpath, which was removed in uuid 7.
-- **Impact:** build tooling only; the missing bounds check is in `v3()`, `v5()` and `v6()` with a caller-supplied buffer. GitHub rates it medium; Dependency-Track may rate it high. ⚠️ **Dependency-Track alert [#226](https://github.com/EyeSeeTea/data-approval-dev/security/code-scanning/226) is high and blocks the gate: it needs an approved dismissal, not yet requested.**
+- **Not reachable in this tree.** The advisory is a missing bounds check in `v3()`, `v5()` and `v6()` when the caller supplies an output buffer. `request` imports only the `v4` subpath (`lib/auth.js`, `lib/multipart.js` and `lib/oauth.js` each do `require('uuid/v4')`), and all three call sites invoke it with no arguments. Checked in `node_modules` on 2026-11-23: `uuid@3.4.0` is the only copy and `request@2.88.2` its only consumer.
+- **Why it cannot be fixed:** the advisory is patched at 11.1.1, but `request` imports the `uuid/v4` subpath, and that subpath was removed in uuid 7. No uuid version both fixes the advisory and keeps it. Forcing `request/uuid: ^11.1.1` fails at load with `ERR_PACKAGE_PATH_NOT_EXPORTED`, as recorded in [dhis2-app-skeleton](https://github.com/EyeSeeTea/dhis2-app-skeleton/blob/master/RESOLUTIONS.md) (not re-tested here).
+- **Impact:** build tooling only. Dependency-Track scores it high; the GitHub advisory database rates it medium.
+- **Why the gate counts it:** `@dhis2/cli-app-scripts` (and so `request` and `uuid`) enters the tree in this PR, so Dependency-Track reports alert [#226](https://github.com/EyeSeeTea/data-approval-dev/security/code-scanning/226) as new against the base.
+- **Approval:** pending. Same finding as dhis2-app-skeleton [#735](https://github.com/EyeSeeTea/dhis2-app-skeleton/security/code-scanning/735), accepted there and dismissed as "won't fix" in [#121](https://github.com/EyeSeeTea/dhis2-app-skeleton/pull/121). Link the approval for #226 here once it is given.
 - **Drop when:** `request` leaves the tree.
 
 #### `request@2.88.2`: GHSA-p8p7-x288-28g6
